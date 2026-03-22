@@ -38,3 +38,21 @@ Use Conventional Commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore
 - `develop` — integration branch
 - `feat/<name>` — feature branches
 - `fix/<name>` — bugfix branches
+
+## MCP Servers
+
+9 MCP servers are configured for direct data access and tooling. Prefer querying live data over guessing.
+
+| Server | Purpose |
+|:---|:---|
+| `postgres` | SQL queries against PostgreSQL (schema verification, data checks) |
+| `mongodb` | Read-only MongoDB access (audit logs, documents) |
+| `redis` | Redis key/value ops (cache inspection, token blocklist) |
+| `memory` | Persistent key-value store for session context |
+| `filesystem` | Project file read/write |
+| `playwright` | Browser automation & E2E testing |
+| `chrome-devtools` | Chrome DevTools Protocol (network, performance) |
+| `context7` | Current library documentation lookup |
+| `markitdown` | Convert files (PDF, DOCX) to Markdown |
+
+**Rule**: Query `postgres` to verify schemas before writing Go repository code. Use `context7` for up-to-date library APIs.

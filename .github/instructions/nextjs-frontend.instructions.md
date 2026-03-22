@@ -27,6 +27,11 @@ applyTo: "frontend/**/*.{ts,tsx}"
 - Use `fetch` with proper error handling
 - Type all API responses with interfaces from `src/types/`
 
+## MCP-Assisted Development
+- Use `playwright` MCP for browser automation, E2E testing, and screenshot capture
+- Use `chrome-devtools` MCP to inspect network requests, debug CSS, and audit performance
+- Use `context7` MCP to look up current Next.js/React/Tailwind APIs instead of guessing
+
 ## Styling — Consolidated Design System
 
 ### Architecture: Single Source of Truth

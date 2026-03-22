@@ -47,6 +47,12 @@ This project uses **two databases**. Domain repository interfaces are database-a
 - Use `options.Find().SetLimit().SetSkip()` for pagination
 - Never store sensitive data unencrypted in MongoDB
 
+## MCP Server Integration
+Before writing persistence code, use the available MCP servers to verify state:
+- **`postgres` MCP**: Query schemas, verify migrations, test queries before embedding in Go
+- **`mongodb` MCP**: Inspect collections, verify document schemas and indexes (read-only)
+- **`redis` MCP**: Check cached data, inspect TTLs, verify blocklist entries
+
 ## Choosing Which Database
 | If the data... | Use |
 |:---|:---|

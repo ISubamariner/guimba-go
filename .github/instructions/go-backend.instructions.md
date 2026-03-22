@@ -13,6 +13,11 @@ infrastructure/persistence ─────────────┘ (implement
 
 **Dependency rule**: Dependencies point INWARD only. Never import an outer layer from an inner layer.
 
+## MCP-Assisted Development
+- Use `postgres` MCP to verify table schemas before writing repository queries
+- Use `context7` MCP to look up current Go library APIs (pgx, chi, validator, jwt) instead of guessing
+- Use `redis` MCP to inspect cache state when debugging cache-aside logic
+
 ## Domain Layer (`internal/domain/`)
 - Contains entities, repository interfaces, service interfaces, value objects
 - ZERO external dependencies (no frameworks, no DB drivers)

@@ -11,6 +11,19 @@ Record of all documentation updates performed by the doc-sync skill. Newest entr
 - **Changes**: Brief description of what was updated in each file
 -->
 
+### 2026-03-22 — MCP Server Documentation & Optimization
+- **Trigger**: 9 MCP servers configured (postgres, mongodb, redis, memory, filesystem, playwright, chrome-devtools, context7, markitdown) — documentation needed to optimize usage
+- **Files Updated**: .github/copilot-instructions.md, AGENTS.md, .github/instructions/database.instructions.md, .github/instructions/go-backend.instructions.md, .github/instructions/nextjs-frontend.instructions.md, documentation/copilot-config/README.md, documentation/copilot-config/mcp-servers.md (NEW), .vscode/mcp.json, changelog.md
+- **Changes**:
+  - **copilot-instructions.md**: Added "MCP Servers" section with server table, usage rules
+  - **AGENTS.md**: Added "MCP Servers" section with compact reference
+  - **database.instructions.md**: Added "MCP Server Integration" section
+  - **go-backend.instructions.md**: Added "MCP-Assisted Development" section
+  - **nextjs-frontend.instructions.md**: Added "MCP-Assisted Development" section
+  - **copilot-config/README.md**: Added MCP config locations and server list
+  - **copilot-config/mcp-servers.md**: NEW — full MCP reference (capabilities, usage patterns, troubleshooting)
+  - **.vscode/mcp.json**: Added missing chrome-devtools and markitdown servers
+
 ### 2026-03-22 — Phase 4 Beneficiaries Module Complete
 - **Trigger**: Phase 4 implementation — Beneficiaries with program enrollment (entity, 7 use cases, PG repo, DTOs, handler with Swagger, many-to-many program_beneficiaries junction, 31 new tests, 88 total)
 - **Files Updated**: file-tree.md, clean-architecture.md, testing-strategy.md, api/README.md, auth-rbac/references/auth-patterns.md, error-handling/references/error-codes.md, seed-data/SKILL.md, changelog.md

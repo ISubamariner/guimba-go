@@ -79,6 +79,29 @@ When updating existing code or skills:
 - Preserve existing working logic
 - Only modify what's necessary to address the issue
 
+## MCP Servers (Tool Providers)
+
+This project has 9 MCP servers configured to extend Copilot's capabilities with live data access and specialized tools. Use them proactively — don't guess when you can query.
+
+| Server | What It Provides | When to Use |
+|:---|:---|:---|
+| `postgres` | Direct SQL queries on PostgreSQL | Verify schema, check data, test queries, inspect migrations — before writing repo code |
+| `mongodb` | Read-only MongoDB access | Inspect audit logs, check document schemas, verify CQRS read models |
+| `redis` | Redis key/value operations | Check cached data, inspect token blocklist, verify TTLs |
+| `memory` | Persistent key-value memory | Store session context, track cross-task state, remember decisions |
+| `filesystem` | Read/write project files | Bulk file operations, directory traversal, file metadata |
+| `playwright` | Browser automation & testing | Run E2E tests, capture screenshots, validate UI flows |
+| `chrome-devtools` | Chrome DevTools Protocol | Inspect network requests, debug frontend, audit performance |
+| `context7` | Up-to-date library documentation | Look up current API docs for any npm/Go package instead of guessing |
+| `markitdown` | Convert files to Markdown | Convert PDFs, DOCX, XLSX to Markdown for analysis |
+
+### MCP Usage Rules
+- **Database servers require Docker running** — run `docker compose up -d` first (see `docker-compose-services` skill)
+- **Query before coding** — use `postgres` MCP to verify table schemas before writing repository code
+- **Use `context7` for docs** — always check current library APIs instead of relying on training data
+- **MongoDB is read-only** — use it for inspection only; writes go through Go application code
+- **Memory server** — use for tracking multi-step task progress across conversation turns
+
 ## Available Skills & Agents
 
 ### Skills (auto-triggered by description matching)

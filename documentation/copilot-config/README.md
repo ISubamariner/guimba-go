@@ -7,7 +7,13 @@ This is a **readable mirror** of the live Copilot configuration in `.github/`. T
 ### Layer 1: Global Instructions (always loaded)
 - **Source**: `.github/copilot-instructions.md`
 - **Mirror**: See source directly
-- **Contents**: Tech stack, coding standards, anti-redundancy guardrails, bug logging convention, doc-sync rule
+- **Contents**: Tech stack, coding standards, anti-redundancy guardrails, bug logging convention, doc-sync rule, MCP server usage rules
+
+### MCP Server Configuration
+- **Reference**: `documentation/copilot-config/mcp-servers.md`
+- **Config files**: `~/.copilot/mcp-config.json` (CLI), `.vscode/mcp.json` (VS Code), `.github/copilot/mcp.json` (remote agent)
+- **Servers**: postgres, mongodb, redis, memory, filesystem, playwright, chrome-devtools, context7, markitdown
+- **Key rule**: Query live databases before writing persistence code; use context7 for up-to-date library docs
 
 ### Layer 2: Path-Specific Instructions (loaded when matching files are open)
 

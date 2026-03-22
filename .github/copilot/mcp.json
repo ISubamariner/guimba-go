@@ -1,6 +1,7 @@
 {
   "mcpServers": {
     "postgres": {
+      "type": "stdio",
       "command": "npx",
       "args": [
         "-y",
@@ -9,16 +10,16 @@
       ]
     },
     "mongodb": {
+      "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "mongodb-mcp-server",
-        "--connectionString",
-        "mongodb://guimba:guimba_secret@localhost:27017/guimba_db?authSource=admin",
-        "--readOnly"
-      ]
+      "args": ["-y", "mongodb-mcp-server"],
+      "env": {
+        "MDB_MCP_CONNECTION_STRING": "mongodb://guimba:guimba_secret@localhost:27017/guimba_db?authSource=admin",
+        "MDB_MCP_READ_ONLY": "true"
+      }
     },
     "redis": {
+      "type": "stdio",
       "command": "npx",
       "args": [
         "-y",
@@ -27,26 +28,32 @@
       ]
     },
     "memory": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-memory"]
     },
     "chrome-devtools": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "chrome-devtools-mcp@latest"]
     },
     "playwright": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@playwright/mcp@latest"]
     },
     "markitdown": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "markitdown-mcp-npx"]
     },
     "context7": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"]
     },
     "filesystem": {
+      "type": "stdio",
       "command": "npx",
       "args": [
         "-y",
