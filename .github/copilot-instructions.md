@@ -23,7 +23,7 @@ Guimba-GO is a full-stack municipal management system built with a **Go backend 
 - Error handling: return errors, don't panic. Use `pkg/apperror/` custom error types.
 - Logging: use `slog` (stdlib)
 - Validation: use `go-playground/validator` struct tags on DTOs
-- Tests: all in centralized `tests/` folder (unit, integration, e2e)
+- Tests: Go tests in `backend/tests/` (unit, integration); Playwright E2E in root `tests/`
 - API versioning: all routes prefixed with `/api/v1/`
 
 ### Frontend

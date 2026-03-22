@@ -11,6 +11,20 @@ Record of all documentation updates performed by the doc-sync skill. Newest entr
 - **Changes**: Brief description of what was updated in each file
 -->
 
+### 2026-03-22 — Phase 3 Core Backend Setup Complete
+- **Trigger**: Phase 3 implementation — config, database connections, cache, HTTP layer, migrations, swagger, tests, main.go wiring
+- **Files Updated**: MASTERPLAN.md, .github/copilot-instructions.md, AGENTS.md, .github/instructions/go-backend.instructions.md, documentation/architecture/testing-strategy.md, documentation/architecture/clean-architecture.md, documentation/project/setup-guide.md, .github/skills/env-config/SKILL.md, .github/skills/doc-sync/references/file-tree.md, .github/skills/doc-sync/references/changelog.md
+- **Changes**:
+  - **MASTERPLAN.md**: Checked off 12 of 13 Phase 3 tasks (persistence implementations deferred to Phase 4); added note about Go test location
+  - **copilot-instructions.md**: Updated test location from "centralized `tests/`" to "Go tests in `backend/tests/`; Playwright E2E in root `tests/`"
+  - **AGENTS.md**: Added MongoDB to architecture diagram
+  - **go-backend.instructions.md**: Updated testing section — paths changed from `tests/` to `backend/tests/`, added note about internal package visibility, added Playwright location
+  - **testing-strategy.md**: Updated all Go test paths to `backend/tests/`, added explanation for why tests moved, updated shared resources table, updated running tests commands
+  - **clean-architecture.md**: Replaced pseudo-code main.go example with actual implemented wiring (Viper config, pgx pool, mongo client, redis client, migration runner, Chi router)
+  - **setup-guide.md**: Fixed Redis port (6380 external), updated migration section (auto-run on startup), fixed integration test command path
+  - **env-config/SKILL.md**: Replaced godotenv/envconfig examples with actual Viper-based implementation (Config struct with mapstructure tags, Viper loader, DSN auto-construction)
+  - **file-tree.md**: Major update — replaced all .gitkeep entries in infrastructure/delivery/docs/migrations with actual file descriptions; added backend/tests/ section; updated implementation status table (12 items now ✅); added note about root tests/ being for Playwright only
+
 ### 2026-03-22 — Project File Tree & File Registry Created
 - **Trigger**: Need for a running inventory of all project files with descriptions for orientation and staleness detection
 - **Files Updated**: .github/skills/doc-sync/references/file-tree.md (NEW), .github/skills/doc-sync/SKILL.md, .github/skills/doc-sync/references/changelog.md

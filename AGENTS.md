@@ -6,6 +6,7 @@ Guimba — a full-stack municipal management system built with **Go + Next.js** 
 ## Architecture
 ```
 Client (Next.js) → API Gateway (Go/Chi) → Services → Repositories → PostgreSQL
+                                                                   → MongoDB (audit, docs)
                                                                    → Redis (cache)
 ```
 

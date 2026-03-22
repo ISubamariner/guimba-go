@@ -45,10 +45,11 @@ infrastructure/persistence ─────────────┘ (implement
 - Always return structured error responses (see AGENTS.md)
 
 ## Testing
-- All tests live in `tests/` at project root (not alongside source files)
-- Unit tests in `tests/unit/` — mock all dependencies
-- Integration tests in `tests/integration/` — real DB via testcontainers
-- Mocks in `tests/mocks/`
+- Go tests live in `backend/tests/` (not root `tests/`) — required by Go's `internal` package visibility rules
+- Unit tests in `backend/tests/unit/` — mock all dependencies
+- Integration tests in `backend/tests/integration/` — real DB via testcontainers
+- Mocks in `backend/tests/mocks/`
+- Playwright E2E tests remain in root `tests/playwright/`
 
 ## Imports
 - Group imports: stdlib, third-party, internal (separated by blank lines)

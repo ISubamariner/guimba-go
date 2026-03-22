@@ -51,25 +51,29 @@ All wiring happens in `cmd/server/main.go`:
 
 ```go
 func main() {
-    // 1. Load config
-    cfg := config.Load()
+    // 1. Load config (Viper-based, reads .env + env vars)
+    cfg, _ := config.Load()
 
-    // 2. Create infrastructure (outermost)
-    db := database.NewPool(cfg.DatabaseURL)
-    programRepo := persistence.NewProgramRepoPg(db)
+    // 2. Create infrastructure (outermost — DB pools, cache clients)
+    pgPool, _ := database.NewPostgresPool(ctx, cfg.Postgres.DSN)
+    mongoClient, _ := database.NewMongoClient(ctx, cfg.Mongo.URI)
+    redisClient, _ := cache.NewRedisClient(ctx, cfg.Redis.Addr, cfg.Redis.Password)
 
-    // 3. Create use cases (middle)
-    createProgram := program.NewCreateProgramUseCase(programRepo)
-    getProgram := program.NewGetProgramUseCase(programRepo)
+    // 3. Run migrations
+    database.RunMigrations(cfg.Postgres.DSN, "migrations")
 
-    // 4. Create delivery (outermost)
-    programHandler := handler.NewProgramHandler(createProgram, getProgram)
+    // 4. Create handlers (wired with infrastructure)
+    healthHandler := handler.NewHealthHandler(pgPool, mongoClient, redisClient)
 
-    // 5. Wire routes
-    r := router.New(programHandler)
-    http.ListenAndServe(":8080", r)
+    // 5. Wire router with middleware (Chi)
+    r := router.NewRouter(healthHandler, cfg.App.FrontendURL)
+
+    // 6. Start server with graceful shutdown
+    srv := &http.Server{Addr: ":" + cfg.App.Port, Handler: r}
 }
 ```
+
+> **Phase 4 will add**: repository implementations → use case constructors → domain handlers, following the same inward dependency pattern.
 
 ## Polyglot Persistence & Clean Architecture
 

@@ -21,7 +21,7 @@ cd Guimba-GO
 ```bash
 docker compose up -d
 ```
-This starts PostgreSQL (port 5432), MongoDB (port 27017), and Redis (port 6379).
+This starts PostgreSQL (port 5432), MongoDB (port 27017), and Redis (port 6380 externally → 6379 internally).
 
 ### 3. Set Up Environment
 ```bash
@@ -46,8 +46,10 @@ npm run dev
 Frontend runs on `http://localhost:3000`
 
 ### 6. Run Migrations
+Migrations run automatically on server startup via `database.RunMigrations()`.
+To run manually (requires `golang-migrate` CLI):
 ```bash
-migrate -path backend/migrations -database "$DATABASE_URL" up
+migrate -path backend/migrations -database "$POSTGRES_DSN" up
 ```
 
 ### 7. Run Tests
@@ -56,7 +58,7 @@ migrate -path backend/migrations -database "$DATABASE_URL" up
 cd backend && go test ./tests/unit/...
 
 # Go integration tests
-go test -tags=integration ./tests/integration/...
+cd backend && go test -tags=integration ./tests/integration/...
 
 # Playwright E2E
 cd tests/playwright && npx playwright test

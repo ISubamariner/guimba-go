@@ -54,7 +54,7 @@ func TestGetProgram(t *testing.T) {
 ```
 
 ## Mocking with Interfaces
-Define repository interfaces in `domain/repository/` so use cases can be tested with mocks from `tests/mocks/`:
+Define repository interfaces in `domain/repository/` so use cases can be tested with mocks from `backend/tests/mocks/`:
 
 ```go
 // In domain/repository/program_repository.go
@@ -63,7 +63,7 @@ type ProgramRepository interface {
     List(ctx context.Context, limit, offset int) ([]entity.Program, error)
 }
 
-// In tests/mocks/mock_program_repository.go
+// In backend/tests/mocks/mock_program_repository.go
 type MockProgramRepo struct {
     GetByIDFn func(ctx context.Context, id string) (*entity.Program, error)
 }
@@ -107,7 +107,7 @@ go test -v ./tests/...
 
 ## HTTP Handler Testing
 ```go
-// In tests/unit/delivery/program_handler_test.go
+// In backend/tests/unit/delivery/program_handler_test.go
 func TestGetProgramHandler(t *testing.T) {
     req := httptest.NewRequest("GET", "/api/v1/programs/uuid-123", nil)
     rctx := chi.NewRouteContext()

@@ -598,19 +598,22 @@ All automated tests live in the centralized `tests/` folder at project root:
 
 ## Phase 3: Core Backend Setup
 
-- [ ] Set up `internal/infrastructure/config/` — read env vars with viper
-- [ ] Set up `internal/infrastructure/database/` — pgx connection pool + MongoDB client
-- [ ] Set up `internal/infrastructure/cache/` — Redis client
+- [x] Set up `internal/infrastructure/config/` — Viper-based config loading from env vars/.env file
+- [x] Set up `internal/infrastructure/database/` — pgx connection pool + MongoDB client + migration runner
+- [x] Set up `internal/infrastructure/cache/` — go-redis client with connection pooling
 - [ ] Set up `internal/infrastructure/persistence/pg/` — PostgreSQL repository implementations
 - [ ] Set up `internal/infrastructure/persistence/mongo/` — MongoDB repository implementations
-- [ ] Set up `internal/delivery/http/router/` — Chi router with middleware (CORS, logging, auth)
-- [ ] Set up `internal/delivery/http/middleware/` — Auth, CORS, request logging
-- [ ] Create `pkg/apperror/` — structured error types matching the API error format
-- [ ] Create first migration (schema for Guimba entities)
-- [ ] Set up Swagger generation
-- [ ] Write health-check endpoint as first use case → handler flow
-- [ ] Set up `tests/helpers/test_db.go` — testcontainers-based DB for integration tests
-- [ ] Write first unit test in `tests/unit/`
+- [x] Set up `internal/delivery/http/router/` — Chi router with middleware (CORS, logging, request ID, recovery)
+- [x] Set up `internal/delivery/http/middleware/` — CORS, request logging, request ID, panic recovery
+- [x] Create `pkg/apperror/` — structured error types matching the API error format (done in Phase 2)
+- [x] Create first migration (`000001_create_programs`) — programs table with UUID PK, soft deletes, auto-timestamps
+- [x] Set up Swagger generation — swaggo/swag with UI at `/swagger/*`
+- [x] Write health-check endpoint as first use case → handler flow (pings Postgres, MongoDB, Redis)
+- [x] Set up `backend/tests/helpers/test_db.go` — test DB connection helper + assertion utilities
+- [x] Write first unit tests in `backend/tests/unit/` — 9 tests (apperror, middleware, health DTO)
+- [x] Wire `cmd/server/main.go` — config → DB → cache → migrations → router → graceful shutdown
+
+> **Note**: Go tests live in `backend/tests/` (not root `tests/`) due to Go's `internal` package visibility rules. Root `tests/` is reserved for Playwright E2E and cross-cutting fixtures.
 
 ---
 

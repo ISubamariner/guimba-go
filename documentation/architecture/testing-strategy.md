@@ -14,19 +14,21 @@
 
 | Type | Location | Scope | Dependencies | Speed |
 |:---|:---|:---|:---|:---|
-| **Go Unit** | `tests/unit/` | Domain entities, use cases, handlers | Mocks only | Fast (~ms) |
-| **Go Integration** | `tests/integration/` | Repository impls, full API calls | Real DB (testcontainers) | Medium (~s) |
-| **Go E2E** | `tests/e2e/` | Multi-step API flows | Running server + DB | Slow (~s) |
+| **Go Unit** | `backend/tests/unit/` | Domain entities, use cases, handlers, middleware | Mocks only | Fast (~ms) |
+| **Go Integration** | `backend/tests/integration/` | Repository impls, full API calls | Real DB (testcontainers) | Medium (~s) |
+| **Go E2E** | `backend/tests/e2e/` | Multi-step API flows | Running server + DB | Slow (~s) |
 | **Playwright** | `tests/playwright/specs/` | Browser UI flows, visual regression | Full stack running | Slow (~s) |
 | **Frontend Unit** | `frontend/__tests__/` | React components, hooks, lib | Jest/Vitest mocks | Fast (~ms) |
+
+> **Why `backend/tests/` instead of root `tests/`?** Go's `internal` package visibility rules prevent external modules from importing `internal/` packages. Since tests need to import handlers, middleware, and DTOs from `internal/`, they must live within the `backend/` module.
 
 ## Shared Resources
 
 | Resource | Location | Used By |
 |:---|:---|:---|
-| Mocks | `tests/mocks/` | Unit tests |
+| Mocks | `backend/tests/mocks/` | Go unit tests |
 | Fixtures (JSON, SQL) | `tests/fixtures/` | Integration, E2E |
-| Test helpers | `tests/helpers/` | All Go tests |
+| Test helpers (Go) | `backend/tests/helpers/` | Go unit & integration tests |
 | Playwright pages | `tests/playwright/pages/` | Playwright specs |
 | Playwright fixtures | `tests/playwright/fixtures/` | Playwright specs |
 | Visual baselines | `tests/playwright/snapshots/` | Playwright visual regression |
@@ -35,10 +37,10 @@
 
 ```bash
 # All Go unit tests
-go test ./tests/unit/...
+cd backend && go test ./tests/unit/...
 
 # All Go integration tests
-go test -tags=integration ./tests/integration/...
+cd backend && go test -tags=integration ./tests/integration/...
 
 # All Playwright tests
 cd tests/playwright && npx playwright test
@@ -53,7 +55,7 @@ cd tests/playwright && npx playwright test --update-snapshots
 cd frontend && npm test
 
 # Full coverage report (Go)
-go test -coverprofile=coverage.out ./tests/... && go tool cover -html=coverage.out
+cd backend && go test -coverprofile=coverage.out ./tests/... && go tool cover -html=coverage.out
 ```
 
 ## Playwright Specifics

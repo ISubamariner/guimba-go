@@ -9,33 +9,46 @@ Manages configuration loading, validation, and secret handling.
 
 ## Config Struct (`infrastructure/config/config.go`)
 
+The actual implementation uses **Viper** for configuration loading:
+
 ```go
 type Config struct {
-    // Application
-    AppPort string `env:"APP_PORT" default:"8080"`
-    AppEnv  string `env:"APP_ENV" default:"development"`
+    App      AppConfig
+    Postgres PostgresConfig
+    Mongo    MongoConfig
+    Redis    RedisConfig
+    JWT      JWTConfig
+}
 
-    // PostgreSQL
-    PostgresDSN string `env:"POSTGRES_DSN" required:"true"`
+type AppConfig struct {
+    Port        string `mapstructure:"APP_PORT"`
+    Env         string `mapstructure:"APP_ENV"`
+    LogLevel    string `mapstructure:"LOG_LEVEL"`
+    FrontendURL string `mapstructure:"FRONTEND_URL"`
+}
 
-    // MongoDB
-    MongoURI string `env:"MONGO_URI" required:"true"`
-    MongoDB  string `env:"MONGO_DB" default:"guimba_db"`
+type PostgresConfig struct {
+    Host     string `mapstructure:"POSTGRES_HOST"`
+    Port     string `mapstructure:"POSTGRES_PORT"`
+    User     string `mapstructure:"POSTGRES_USER"`
+    Password string `mapstructure:"POSTGRES_PASSWORD"`
+    DB       string `mapstructure:"POSTGRES_DB"`
+    DSN      string `mapstructure:"POSTGRES_DSN"`
+}
 
-    // Redis
-    RedisAddr     string `env:"REDIS_ADDR" default:"localhost:6380"`
-    RedisPassword string `env:"REDIS_PASSWORD" required:"true"`
+type MongoConfig struct {
+    URI string `mapstructure:"MONGO_URI"`
+    DB  string `mapstructure:"MONGO_DB"`
+}
 
-    // Auth
-    JWTSecret          string `env:"JWT_SECRET" required:"true"`
-    AccessTokenExpiry   time.Duration `env:"ACCESS_TOKEN_EXPIRY" default:"15m"`
-    RefreshTokenExpiry  time.Duration `env:"REFRESH_TOKEN_EXPIRY" default:"168h"` // 7 days
+type RedisConfig struct {
+    Addr     string `mapstructure:"REDIS_ADDR"`
+    Password string `mapstructure:"REDIS_PASSWORD"`
+}
 
-    // Logging
-    LogLevel string `env:"LOG_LEVEL" default:"info"`
-
-    // Frontend
-    FrontendURL string `env:"FRONTEND_URL" default:"http://localhost:3000"`
+type JWTConfig struct {
+    Secret     string        `mapstructure:"JWT_SECRET"`
+    Expiration time.Duration `mapstructure:"JWT_EXPIRATION"`
 }
 ```
 
@@ -43,20 +56,29 @@ type Config struct {
 
 ```go
 func Load() (*Config, error) {
-    // 1. Load .env file (if exists)
-    godotenv.Load() // doesn't error if file missing
+    v := viper.New()
+    v.SetConfigFile(".env")
+    v.SetConfigType("env")
+    v.AddConfigPath(".")
+    v.AutomaticEnv()
 
-    // 2. Read from environment
-    cfg := &Config{}
-    if err := envconfig.Process("", cfg); err != nil {
-        return nil, fmt.Errorf("config: %w", err)
+    // Read .env file (ignore error if file doesn't exist)
+    _ = v.ReadInConfig()
+
+    setDefaults(v)
+
+    // Build config from Viper values
+    cfg := &Config{...}
+
+    // Auto-construct DSN/URI if not explicitly provided
+    if cfg.Postgres.DSN == "" {
+        cfg.Postgres.DSN = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", ...)
     }
 
-    // 3. Validate required fields
-    if err := cfg.Validate(); err != nil {
+    // Validate required fields
+    if err := validate(cfg); err != nil {
         return nil, err
     }
-
     return cfg, nil
 }
 ```
@@ -64,16 +86,19 @@ func Load() (*Config, error) {
 ## Config Validation (Fail Fast)
 
 ```go
-func (c *Config) Validate() error {
+func validate(cfg *Config) error {
     var errs []string
-    if c.PostgresDSN == "" {
+    if cfg.App.Port == "" {
+        errs = append(errs, "APP_PORT is required")
+    }
+    if cfg.Postgres.DSN == "" {
         errs = append(errs, "POSTGRES_DSN is required")
     }
-    if c.JWTSecret == "" || len(c.JWTSecret) < 32 {
-        errs = append(errs, "JWT_SECRET must be at least 32 characters")
+    if cfg.JWT.Secret == "change-me-in-production" && cfg.App.Env == "production" {
+        errs = append(errs, "JWT_SECRET must be set in production")
     }
     if len(errs) > 0 {
-        return fmt.Errorf("config validation failed:\n  - %s", strings.Join(errs, "\n  - "))
+        return fmt.Errorf("%s", strings.Join(errs, "; "))
     }
     return nil
 }
@@ -92,11 +117,11 @@ If required vars are missing, the app crashes on startup with a clear error mess
 
 | File | Purpose | Loaded |
 |:---|:---|:---|
-| `.env` | Local development defaults | Always (via `godotenv.Load()`) |
+| `.env` | Local development defaults | Always (via Viper's `ReadInConfig()`) |
 | `.env.test` | Test environment overrides | In test setup |
 | Environment vars | Production values | Set by deployment platform |
 
-**Priority**: Environment variables > `.env` file > struct defaults
+**Priority**: Environment variables > `.env` file > Viper defaults (set via `SetDefault()`)
 
 ## Secret Handling Rules
 
