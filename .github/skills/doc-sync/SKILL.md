@@ -34,6 +34,7 @@ These are all the files this skill is responsible for keeping in sync:
 | `.github/agents/api-builder.agent.md` | API scaffolding workflow | New libraries added, endpoint patterns change |
 | `.github/agents/frontend-builder.agent.md` | Frontend scaffolding workflow | Component patterns change, new UI libraries |
 | `.github/agents/db-migrator.agent.md` | Migration workflow | Migration tooling changes, new DB patterns |
+| `.github/agents/feature-orchestrator.agent.md` | Full vertical feature slice orchestration | New layers, patterns, or tools change |
 
 ### Tier 4: Skills — Check When Domain Expertise Evolves
 | File | Purpose | Update When |
@@ -44,6 +45,14 @@ These are all the files this skill is responsible for keeping in sync:
 | `.github/skills/bug-tracker/SKILL.md` | Bug tracking process | Process improvements, new escalation rules |
 | `.github/skills/playwright-testing/SKILL.md` | Playwright E2E & visual regression | New test patterns, config changes, POM conventions change |
 | `.github/skills/design-system/SKILL.md` | Consolidated CSS, design tokens, UI primitives | New tokens, components, or styling patterns adopted |
+| `.github/skills/auth-rbac/SKILL.md` | JWT auth, RBAC, login/register flows | Auth patterns, role hierarchy, or middleware changes |
+| `.github/skills/api-client/SKILL.md` | Frontend API client, typing, error handling | API client patterns, error format, or auth flow changes |
+| `.github/skills/error-handling/SKILL.md` | Standardized error codes and propagation | New error codes, handler patterns, or error format changes |
+| `.github/skills/ci-cd/SKILL.md` | GitHub Actions CI/CD pipelines | Pipeline stages, caching, or deployment strategy changes |
+| `.github/skills/security-hardening/SKILL.md` | CORS, CSP, rate limiting, OWASP | Security middleware, headers, or policy changes |
+| `.github/skills/redis-caching/SKILL.md` | Redis caching patterns and invalidation | Cache strategy, key naming, or TTL changes |
+| `.github/skills/seed-data/SKILL.md` | Database seed data and test fixtures | New entities, fixture format, or seed runner changes |
+| `.github/skills/env-config/SKILL.md` | Environment config, .env, secret handling | New config fields, environment hierarchy changes |
 | `.github/skills/bug-tracker/references/bug-log.md` | Resolved bugs history | Every bug fix (handled by bug-tracker skill) |
 
 ### Tier 5: Reference Files — Deep Knowledge
@@ -54,6 +63,14 @@ These are all the files this skill is responsible for keeping in sync:
 | `.github/skills/go-testing/references/test-patterns.md` | Test code patterns | New testing idioms adopted |
 | `.github/skills/playwright-testing/references/playwright-patterns.md` | Playwright config, POM, visual regression patterns | New browser test patterns, CI config changes |
 | `.github/skills/design-system/references/token-registry.md` | Color/spacing/typography tokens, UI component inventory | New tokens, new primitives, variant changes |
+| `.github/skills/auth-rbac/references/auth-patterns.md` | JWT claims, middleware chain, role hierarchy | Auth implementation patterns change |
+| `.github/skills/api-client/references/client-patterns.md` | API client template, error types, pagination | Client implementation changes |
+| `.github/skills/error-handling/references/error-codes.md` | Error code table, response examples, handler helpers | New error codes or response format changes |
+| `.github/skills/ci-cd/references/workflow-templates.md` | GitHub Actions workflow templates | Pipeline configuration changes |
+| `.github/skills/security-hardening/references/security-checklist.md` | OWASP checklist, middleware stack, CSP template | Security requirements or middleware changes |
+| `.github/skills/redis-caching/references/cache-patterns.md` | Cache wrapper template, key naming, TTL cheat sheet | Caching patterns or strategy changes |
+| `.github/skills/seed-data/references/fixture-templates.md` | SQL/JSON fixture templates, seed runner code | New entities or fixture format changes |
+| `.github/skills/env-config/references/config-template.md` | Config struct, loader, .env.example template | Config fields or loading strategy changes |
 | `.github/skills/doc-sync/references/changelog.md` | Record of all doc updates | Every time this skill runs |
 
 ### Tier 6: Documentation Hub (`documentation/`)

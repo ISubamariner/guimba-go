@@ -1,4 +1,4 @@
-# SPMIS-GO Documentation Hub
+# Guimba-GO Documentation Hub
 
 Central reference for all project documentation, architecture decisions, system prompts, and Copilot configuration.
 

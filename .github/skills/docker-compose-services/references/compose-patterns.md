@@ -6,7 +6,7 @@ Always add health checks so dependent services wait for readiness:
 ```yaml
 postgres:
   healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U spmis"]
+    test: ["CMD-SHELL", "pg_isready -U guimba"]
     interval: 5s
     timeout: 5s
     retries: 5

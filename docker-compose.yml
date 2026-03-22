@@ -1,32 +1,32 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: spmis-postgres
+    container_name: guimba-postgres
     restart: unless-stopped
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-spmis}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spmis_secret}
-      POSTGRES_DB: ${POSTGRES_DB:-spmis_db}
+      POSTGRES_USER: ${POSTGRES_USER:-guimba}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-guimba_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-guimba_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spmis} -d ${POSTGRES_DB:-spmis_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-guimba} -d ${POSTGRES_DB:-guimba_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   mongodb:
     image: mongo:7
-    container_name: spmis-mongodb
+    container_name: guimba-mongodb
     restart: unless-stopped
     ports:
       - "${MONGO_PORT:-27017}:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-spmis}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-spmis_secret}
-      MONGO_INITDB_DATABASE: ${MONGO_DB:-spmis_db}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-guimba}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-guimba_secret}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-guimba_db}
     volumes:
       - mongo_data:/data/db
     healthcheck:
@@ -37,15 +37,15 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: spmis-redis
+    container_name: guimba-redis
     restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6380}:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-spmis_secret}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-guimba_secret}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-spmis_secret}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-guimba_secret}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -54,7 +54,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: spmis-backend
+    container_name: guimba-backend
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8080}:8080"
@@ -72,7 +72,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: spmis-frontend
+    container_name: guimba-frontend
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-3000}:3000"

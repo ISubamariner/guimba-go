@@ -1,7 +1,7 @@
 # Prompt Architecture Design Decisions
 
 ## Context
-We started with the "Connected Trio" prompt (see `connected-trio-original.md`) and needed to decide how to implement its ideas within the SPMIS-GO project.
+We started with the "Connected Trio" prompt (see `connected-trio-original.md`) and needed to decide how to implement its ideas within the Guimba-GO project.
 
 ## Decision: Use Copilot-Native Architecture, Not a Custom Prompt System
 

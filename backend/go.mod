@@ -1,4 +1,4 @@
-module github.com/ISubamariner/SPMIS-GO/backend
+module github.com/ISubamariner/guimba-go/backend
 
 go 1.26.1
 

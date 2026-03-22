@@ -14,7 +14,7 @@
 ### 1. Clone & Enter Project
 ```bash
 git clone <repo-url>
-cd SPMIS-GO
+cd Guimba-GO
 ```
 
 ### 2. Start Infrastructure

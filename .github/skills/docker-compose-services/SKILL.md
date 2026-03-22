@@ -46,12 +46,12 @@ docker compose logs -f redis
 
 ### Connect to PostgreSQL
 ```bash
-docker compose exec postgres psql -U spmis -d spmis_db
+docker compose exec postgres psql -U guimba -d guimba_db
 ```
 
 ### Connect to MongoDB
 ```bash
-docker compose exec mongodb mongosh -u spmis -p spmis_password spmis_db
+docker compose exec mongodb mongosh -u guimba -p guimba_secret guimba_db
 ```
 
 ## Troubleshooting

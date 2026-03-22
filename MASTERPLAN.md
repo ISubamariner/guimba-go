@@ -1,4 +1,4 @@
-# SPMIS Refactoring Masterplan: C# → Go Backend + Next.js Frontend
+# Guimba-GO Masterplan: Go Backend + Next.js Frontend
 
 ## Current Environment Snapshot
 
@@ -156,7 +156,7 @@ Solution: Run `go install github.com/swaggo/swag/cmd/swag@latest` and ensure `$G
 ### Complete File Tree to Create
 
 ```
-SPMIS-GO/
+Guimba-GO/
 ├── .github/
 │   │
 │   ├── copilot-instructions.md            ← LAYER 1: Global project context (ALWAYS loaded)
@@ -237,7 +237,7 @@ Use this before considering a skill "done":
 
 ### Tasks
 
-- [x] Initialize git repository in SPMIS-GO
+- [x] Initialize git repository in Guimba-GO
 - [x] Create `.github/copilot-instructions.md` with project context, anti-redundancy guardrails, bug logging convention, doc-sync rule
 - [x] Create `AGENTS.md` at repo root with coding conventions
 - [x] Create path-specific instruction files (with proper `applyTo` frontmatter) for backend, frontend, database
@@ -323,7 +323,7 @@ The backend follows **Clean Architecture** (Uncle Bob) — dependencies point in
 ### Target Folder Structure
 
 ```
-SPMIS-GO/
+Guimba-GO/
 ├── docker-compose.yml       ← Full stack: Go backend + Next.js frontend + PostgreSQL + MongoDB + Redis
 ├── .env.example             ← Environment variable template
 ├── .gitignore
@@ -584,7 +584,7 @@ All automated tests live in the centralized `tests/` folder at project root:
 - [ ] Set up `internal/delivery/http/router/` — Chi router with middleware (CORS, logging, auth)
 - [ ] Set up `internal/delivery/http/middleware/` — Auth, CORS, request logging
 - [ ] Create `pkg/apperror/` — structured error types matching the API error format
-- [ ] Create first migration (schema from C# SPMIS)
+- [ ] Create first migration (schema for Guimba entities)
 - [ ] Set up Swagger generation
 - [ ] Write health-check endpoint as first use case → handler flow
 - [ ] Set up `tests/helpers/test_db.go` — testcontainers-based DB for integration tests
@@ -592,12 +592,12 @@ All automated tests live in the centralized `tests/` folder at project root:
 
 ---
 
-## Phase 4: Refactor C# SPMIS → Go (Iterative, per aggregate)
+## Phase 4: Build Domain Modules (Iterative, per aggregate)
 
-Port module-by-module from the original C# codebase, following Clean Architecture layers:
+Build module-by-module, following Clean Architecture layers:
 
-For **each** domain aggregate (e.g., Programs, Users, Beneficiaries):
-- [ ] Analyze original C# models and schema
+For **each** domain aggregate (e.g., Debts, Users, Borrowers):
+- [ ] Define domain models and schema
 - [ ] Create `domain/entity/` structs (zero dependencies)
 - [ ] Create `domain/repository/` interface
 - [ ] Create `usecase/` implementations (application business rules)
@@ -636,7 +636,7 @@ Port order:
   - [ ] Badge, Alert, Toast
   - [ ] Barrel export in `src/components/ui/index.ts`
 - [ ] Create API client layer
-- [ ] Port UI pages from original SPMIS (using design system components)
+- [ ] Port UI pages for Guimba (using design system components)
 - [ ] Connect to Go backend APIs
 - [ ] Set up Playwright Page Object Models for completed pages
 - [ ] Write Playwright E2E specs for critical user flows

@@ -17,9 +17,9 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ### Step 1: Add General API Info
 In `backend/cmd/server/main.go`, add top-level annotations:
 ```go
-// @title SPMIS API
+// @title Guimba API
 // @version 1.0
-// @description Social Protection Management Information System API
+// @description Guimba Batangan Debt Management System API
 // @host localhost:8080
 // @BasePath /api/v1
 // @securityDefinitions.apikey BearerAuth

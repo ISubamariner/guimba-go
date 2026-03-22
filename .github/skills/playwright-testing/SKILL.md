@@ -64,7 +64,7 @@ export const test = base.extend<Fixtures>({
   authenticatedPage: async ({ page }, use) => {
     // Login via API (faster than UI login)
     const response = await page.request.post('/api/v1/auth/login', {
-      data: { email: 'test@spmis.gov', password: 'testpass' }
+      data: { email: 'test@guimba.gov', password: 'testpass' }
     });
     const { token } = await response.json();
     await page.context().addCookies([{ name: 'auth', value: token, url: 'http://localhost:3000' }]);

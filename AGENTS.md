@@ -1,7 +1,7 @@
-# SPMIS-GO
+# Guimba-GO
 
 ## What Is This?
-SPMIS (Social Protection Management Information System) — a full-stack application being refactored from C#/.NET to **Go + Next.js**.
+Guimba — a full-stack municipal management system built with **Go + Next.js** for the Guimba Batangan Debt Management System.
 
 ## Architecture
 ```

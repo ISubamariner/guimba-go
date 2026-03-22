@@ -1,7 +1,7 @@
-# SPMIS-GO Project Instructions
+# Guimba-GO Project Instructions
 
 ## Project Overview
-This is a refactoring of the SPMIS (Social Protection Management Information System) from C#/.NET to a **Go backend + Next.js frontend** architecture.
+Guimba-GO is a full-stack municipal management system built with a **Go backend + Next.js frontend** architecture for the Guimba Batangan Debt Management System.
 
 ## Tech Stack
 - **Backend**: Go 1.24+, Chi router, pgx (PostgreSQL), mongo-go-driver (MongoDB), go-redis
@@ -78,3 +78,32 @@ When updating existing code or skills:
 - Do not rewrite from scratch — use targeted, diff-style changes
 - Preserve existing working logic
 - Only modify what's necessary to address the issue
+
+## Available Skills & Agents
+
+### Skills (auto-triggered by description matching)
+| Skill | Purpose |
+|:---|:---|
+| `docker-compose-services` | Local dev environment (PostgreSQL, MongoDB, Redis) |
+| `swagger-gen` | Swagger/OpenAPI doc generation from Go annotations |
+| `go-testing` | Go test patterns, table-driven tests, mocking |
+| `bug-tracker` | Persistent bug memory, pattern recognition |
+| `doc-sync` | Documentation sync & audit (long-term memory) |
+| `playwright-testing` | Browser E2E testing & visual regression |
+| `design-system` | Consolidated CSS, design tokens, UI primitives |
+| `auth-rbac` | JWT authentication, RBAC, login/register flows |
+| `api-client` | Frontend API client, typed requests, error handling |
+| `error-handling` | Standardized error codes & propagation via `pkg/apperror/` |
+| `ci-cd` | GitHub Actions CI/CD pipelines |
+| `security-hardening` | CORS, CSP, rate limiting, OWASP Top 10 |
+| `redis-caching` | Cache-aside pattern, TTL strategy, invalidation |
+| `seed-data` | Database seed data & test fixtures |
+| `env-config` | Environment configuration, .env, secret handling |
+
+### Agents (invoked on demand)
+| Agent | Purpose |
+|:---|:---|
+| `api-builder` | Scaffold backend API endpoints (domain → handler) |
+| `frontend-builder` | Scaffold frontend pages & components |
+| `db-migrator` | Create database migration files |
+| `feature-orchestrator` | Orchestrate full vertical feature slices (DB + backend + frontend) |
