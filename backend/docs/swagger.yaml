@@ -1,5 +1,155 @@
 basePath: /api/v1
 definitions:
+  apperror.Code:
+    enum:
+    - NOT_FOUND
+    - VALIDATION_ERROR
+    - UNAUTHORIZED
+    - FORBIDDEN
+    - CONFLICT
+    - INTERNAL_ERROR
+    - BAD_REQUEST
+    type: string
+    x-enum-varnames:
+    - CodeNotFound
+    - CodeValidation
+    - CodeUnauthorized
+    - CodeForbidden
+    - CodeConflict
+    - CodeInternal
+    - CodeBadRequest
+  apperror.ErrorBody:
+    properties:
+      code:
+        $ref: '#/definitions/apperror.Code'
+      details:
+        items:
+          type: string
+        type: array
+      message:
+        type: string
+    type: object
+  apperror.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/apperror.ErrorBody'
+    type: object
+  dto.AssignRoleRequest:
+    properties:
+      role_id:
+        type: string
+    required:
+    - role_id
+    type: object
+  dto.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.BeneficiaryListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.BeneficiaryResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.BeneficiaryResponse:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      national_id:
+        type: string
+      notes:
+        type: string
+      phone_number:
+        type: string
+      programs:
+        items:
+          $ref: '#/definitions/dto.ProgramEnrollmentResponse'
+        type: array
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CreateBeneficiaryRequest:
+    properties:
+      address:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      full_name:
+        maxLength: 255
+        type: string
+      national_id:
+        maxLength: 100
+        type: string
+      notes:
+        type: string
+      phone_number:
+        maxLength: 50
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - suspended
+        type: string
+    required:
+    - full_name
+    - status
+    type: object
+  dto.CreateProgramRequest:
+    properties:
+      description:
+        type: string
+      end_date:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      start_date:
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - closed
+        type: string
+    required:
+    - name
+    - status
+    type: object
+  dto.EnrollProgramRequest:
+    properties:
+      program_id:
+        type: string
+    required:
+    - program_id
+    type: object
   dto.HealthResponse:
     properties:
       services:
@@ -11,6 +161,215 @@ definitions:
       timestamp:
         type: string
     type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.PermissionResponse:
+    properties:
+      category:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.ProgramEnrollmentResponse:
+    properties:
+      enrolled_at:
+        type: string
+      program_id:
+        type: string
+      program_name:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.ProgramListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.ProgramResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.ProgramResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      full_name:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 128
+        minLength: 8
+        type: string
+    required:
+    - email
+    - full_name
+    - password
+    type: object
+  dto.RoleResponse:
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+      is_system_role:
+        type: boolean
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/dto.PermissionResponse'
+        type: array
+    type: object
+  dto.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  dto.UpdateBeneficiaryRequest:
+    properties:
+      address:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      full_name:
+        maxLength: 255
+        type: string
+      national_id:
+        maxLength: 100
+        type: string
+      notes:
+        type: string
+      phone_number:
+        maxLength: 50
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - suspended
+        type: string
+    required:
+    - full_name
+    - status
+    type: object
+  dto.UpdateProgramRequest:
+    properties:
+      description:
+        type: string
+      end_date:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      start_date:
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - closed
+        type: string
+    required:
+    - name
+    - status
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      full_name:
+        maxLength: 255
+        type: string
+      is_active:
+        type: boolean
+    required:
+    - full_name
+    type: object
+  dto.UserListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.UserResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      is_email_verified:
+        type: boolean
+      last_login_at:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/dto.RoleResponse'
+        type: array
+      updated_at:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -18,6 +377,679 @@ info:
   title: Guimba-GO API
   version: "1.0"
 paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns JWT tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Login
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      description: Revokes the current access token
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout
+      tags:
+      - auth
+  /api/v1/auth/me:
+    get:
+      description: Returns the authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchanges a refresh token for a new token pair
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Refresh tokens
+      tags:
+      - auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account and returns JWT tokens
+      parameters:
+      - description: Registration data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /api/v1/beneficiaries:
+    get:
+      description: Returns a paginated list of beneficiaries with optional filtering
+      parameters:
+      - description: Filter by status (active, inactive, suspended)
+        in: query
+        name: status
+        type: string
+      - description: Filter by program ID
+        in: query
+        name: program_id
+        type: string
+      - description: Search by name
+        in: query
+        name: search
+        type: string
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BeneficiaryListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: List beneficiaries
+      tags:
+      - beneficiaries
+    post:
+      consumes:
+      - application/json
+      description: Creates a new beneficiary
+      parameters:
+      - description: Beneficiary data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBeneficiaryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.BeneficiaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Create a beneficiary
+      tags:
+      - beneficiaries
+  /api/v1/beneficiaries/{id}:
+    delete:
+      description: Soft-deletes a beneficiary by ID
+      parameters:
+      - description: Beneficiary ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Delete a beneficiary
+      tags:
+      - beneficiaries
+    get:
+      description: Retrieves a beneficiary by ID with program enrollments
+      parameters:
+      - description: Beneficiary ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BeneficiaryResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Get a beneficiary
+      tags:
+      - beneficiaries
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing beneficiary by ID
+      parameters:
+      - description: Beneficiary ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated beneficiary data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateBeneficiaryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BeneficiaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Update a beneficiary
+      tags:
+      - beneficiaries
+  /api/v1/beneficiaries/{id}/programs:
+    post:
+      consumes:
+      - application/json
+      description: Enrolls a beneficiary in a social program
+      parameters:
+      - description: Beneficiary ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Program enrollment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EnrollProgramRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BeneficiaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Enroll beneficiary in program
+      tags:
+      - beneficiaries
+  /api/v1/beneficiaries/{id}/programs/{programId}:
+    delete:
+      description: Removes a beneficiary from a social program
+      parameters:
+      - description: Beneficiary ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Program ID (UUID)
+        in: path
+        name: programId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Remove beneficiary from program
+      tags:
+      - beneficiaries
+  /api/v1/programs:
+    get:
+      description: Returns a paginated list of programs with optional filtering
+      parameters:
+      - description: Filter by status (active, inactive, closed)
+        in: query
+        name: status
+        type: string
+      - description: Search by name
+        in: query
+        name: search
+        type: string
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProgramListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: List programs
+      tags:
+      - programs
+    post:
+      consumes:
+      - application/json
+      description: Creates a new social protection program
+      parameters:
+      - description: Program data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProgramRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ProgramResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Create a program
+      tags:
+      - programs
+  /api/v1/programs/{id}:
+    delete:
+      description: Soft-deletes a program by ID
+      parameters:
+      - description: Program ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Delete a program
+      tags:
+      - programs
+    get:
+      description: Retrieves a program by its ID
+      parameters:
+      - description: Program ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProgramResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Get a program
+      tags:
+      - programs
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing program by ID
+      parameters:
+      - description: Program ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated program data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProgramRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProgramResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      summary: Update a program
+      tags:
+      - programs
+  /api/v1/users:
+    get:
+      description: Returns a paginated list of users (admin only)
+      parameters:
+      - description: Search by name or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      - description: Filter by role name
+        in: query
+        name: role
+        type: string
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserListResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - users
+  /api/v1/users/{id}:
+    delete:
+      description: Soft-deletes a user (admin only)
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Updates user profile fields (admin only)
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated user data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a user
+      tags:
+      - users
+  /api/v1/users/{id}/roles:
+    post:
+      consumes:
+      - application/json
+      description: Assigns a role to a user (admin only)
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AssignRoleRequest'
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Assign a role to a user
+      tags:
+      - users
+  /api/v1/users/{id}/roles/{roleId}:
+    delete:
+      description: Removes a role from a user (admin only)
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role ID (UUID)
+        in: path
+        name: roleId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperror.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove a role from a user
+      tags:
+      - users
   /health:
     get:
       description: Returns the health status of the API and its dependencies

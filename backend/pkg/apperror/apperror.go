@@ -9,22 +9,22 @@ import (
 type Code string
 
 const (
-	CodeNotFound       Code = "NOT_FOUND"
-	CodeValidation     Code = "VALIDATION_ERROR"
-	CodeUnauthorized   Code = "UNAUTHORIZED"
-	CodeForbidden      Code = "FORBIDDEN"
-	CodeConflict       Code = "CONFLICT"
-	CodeInternal       Code = "INTERNAL_ERROR"
-	CodeBadRequest     Code = "BAD_REQUEST"
+	CodeNotFound     Code = "NOT_FOUND"
+	CodeValidation   Code = "VALIDATION_ERROR"
+	CodeUnauthorized Code = "UNAUTHORIZED"
+	CodeForbidden    Code = "FORBIDDEN"
+	CodeConflict     Code = "CONFLICT"
+	CodeInternal     Code = "INTERNAL_ERROR"
+	CodeBadRequest   Code = "BAD_REQUEST"
 )
 
 // AppError is the standard application error type.
 type AppError struct {
-	Code    Code     `json:"code"`
-	Message string   `json:"message"`
-	Details []string `json:"details,omitempty"`
-	HTTPStatus int   `json:"-"`
-	Err     error    `json:"-"`
+	Code       Code     `json:"code"`
+	Message    string   `json:"message"`
+	Details    []string `json:"details,omitempty"`
+	HTTPStatus int      `json:"-"`
+	Err        error    `json:"-"`
 }
 
 func (e *AppError) Error() string {
@@ -93,5 +93,13 @@ func NewBadRequest(message string) *AppError {
 		Code:       CodeBadRequest,
 		Message:    message,
 		HTTPStatus: http.StatusBadRequest,
+	}
+}
+
+func NewNotFoundMsg(message string) *AppError {
+	return &AppError{
+		Code:       CodeNotFound,
+		Message:    message,
+		HTTPStatus: http.StatusNotFound,
 	}
 }

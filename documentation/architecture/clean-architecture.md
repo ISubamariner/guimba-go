@@ -65,15 +65,53 @@ func main() {
     // 4. Create handlers (wired with infrastructure)
     healthHandler := handler.NewHealthHandler(pgPool, mongoClient, redisClient)
 
-    // 5. Wire router with middleware (Chi)
-    r := router.NewRouter(healthHandler, cfg.App.FrontendURL)
+    // 5. Wire Program module (repo → use cases → handler)
+    programRepo := pg.NewProgramRepoPG(pgPool)
+    createProgramUC := programuc.NewCreateProgramUseCase(programRepo)
+    getProgramUC := programuc.NewGetProgramUseCase(programRepo)
+    listProgramsUC := programuc.NewListProgramsUseCase(programRepo)
+    updateProgramUC := programuc.NewUpdateProgramUseCase(programRepo)
+    deleteProgramUC := programuc.NewDeleteProgramUseCase(programRepo)
+    programHandler := handler.NewProgramHandler(createProgramUC, getProgramUC, listProgramsUC, updateProgramUC, deleteProgramUC)
 
-    // 6. Start server with graceful shutdown
+    // 6. Wire Auth module (JWT manager + blocklist + repos → use cases → handler)
+    jwtManager := auth.NewJWTManager(cfg.JWT.Secret, cfg.JWT.AccessDuration, cfg.JWT.RefreshDuration)
+    tokenBlocklist := cache.NewTokenBlocklist(redisClient)
+    userRepo := pg.NewUserRepoPG(pgPool)
+    roleRepo := pg.NewRoleRepoPG(pgPool)
+    registerUC := authuc.NewRegisterUseCase(userRepo, roleRepo)
+    loginUC := authuc.NewLoginUseCase(userRepo)
+    refreshTokenUC := authuc.NewRefreshTokenUseCase(userRepo, jwtManager, tokenBlocklist)
+    getProfileUC := authuc.NewGetProfileUseCase(userRepo)
+    authHandler := handler.NewAuthHandler(registerUC, loginUC, refreshTokenUC, getProfileUC, jwtManager, tokenBlocklist)
+
+    // 7. Wire User module (use cases → handler)
+    listUsersUC := useruc.NewListUsersUseCase(userRepo)
+    updateUserUC := useruc.NewUpdateUserUseCase(userRepo)
+    deleteUserUC := useruc.NewDeleteUserUseCase(userRepo)
+    assignRoleUC := useruc.NewAssignRoleUseCase(userRepo, roleRepo)
+    userHandler := handler.NewUserHandler(listUsersUC, updateUserUC, deleteUserUC, assignRoleUC)
+
+    // 8. Wire Beneficiary module (repo → use cases → handler)
+    beneficiaryRepo := pg.NewBeneficiaryRepoPG(pgPool)
+    createBeneficiaryUC := beneficiaryuc.NewCreateBeneficiaryUseCase(beneficiaryRepo)
+    getBeneficiaryUC := beneficiaryuc.NewGetBeneficiaryUseCase(beneficiaryRepo)
+    listBeneficiariesUC := beneficiaryuc.NewListBeneficiariesUseCase(beneficiaryRepo)
+    updateBeneficiaryUC := beneficiaryuc.NewUpdateBeneficiaryUseCase(beneficiaryRepo)
+    deleteBeneficiaryUC := beneficiaryuc.NewDeleteBeneficiaryUseCase(beneficiaryRepo)
+    enrollInProgramUC := beneficiaryuc.NewEnrollInProgramUseCase(beneficiaryRepo, programRepo)
+    removeFromProgramUC := beneficiaryuc.NewRemoveFromProgramUseCase(beneficiaryRepo)
+    beneficiaryHandler := handler.NewBeneficiaryHandler(...)
+
+    // 9. Wire router with auth middleware
+    r := router.NewRouter(router.Handlers{..., Beneficiary: beneficiaryHandler}, jwtManager, tokenBlocklist, cfg.App.FrontendURL)
+
+    // 10. Start server with graceful shutdown
     srv := &http.Server{Addr: ":" + cfg.App.Port, Handler: r}
 }
 ```
 
-> **Phase 4 will add**: repository implementations → use case constructors → domain handlers, following the same inward dependency pattern.
+> **Programs + Auth + Users + Beneficiaries** modules are fully wired, demonstrating the DI pattern: `PG repos → use cases → handlers → router`, with auth middleware injected at the router level.
 
 ## Polyglot Persistence & Clean Architecture
 

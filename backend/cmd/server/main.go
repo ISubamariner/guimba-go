@@ -14,6 +14,12 @@ import (
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/cache"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/config"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/database"
+	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/persistence/pg"
+	authuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/auth"
+	beneficiaryuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/beneficiary"
+	programuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/program"
+	useruc "github.com/ISubamariner/guimba-go/backend/internal/usecase/user"
+	"github.com/ISubamariner/guimba-go/backend/pkg/auth"
 	"github.com/ISubamariner/guimba-go/backend/pkg/logger"
 )
 
@@ -71,10 +77,54 @@ func main() {
 	// Wire handlers
 	healthHandler := handler.NewHealthHandler(pgPool, mongoClient, redisClient)
 
-	// TODO: Wire domain repositories, use cases, and handlers here (Phase 4)
+	// Wire Program module
+	programRepo := pg.NewProgramRepoPG(pgPool)
+	createProgramUC := programuc.NewCreateProgramUseCase(programRepo)
+	getProgramUC := programuc.NewGetProgramUseCase(programRepo)
+	listProgramsUC := programuc.NewListProgramsUseCase(programRepo)
+	updateProgramUC := programuc.NewUpdateProgramUseCase(programRepo)
+	deleteProgramUC := programuc.NewDeleteProgramUseCase(programRepo)
+	programHandler := handler.NewProgramHandler(createProgramUC, getProgramUC, listProgramsUC, updateProgramUC, deleteProgramUC)
+
+	// Wire Auth & User module
+	jwtManager := auth.NewJWTManager(cfg.JWT.Secret, 15*time.Minute, 7*24*time.Hour)
+	tokenBlocklist := cache.NewTokenBlocklist(redisClient)
+
+	userRepo := pg.NewUserRepoPG(pgPool)
+	roleRepo := pg.NewRoleRepoPG(pgPool)
+
+	registerUC := authuc.NewRegisterUseCase(userRepo, roleRepo, jwtManager)
+	loginUC := authuc.NewLoginUseCase(userRepo, jwtManager)
+	refreshUC := authuc.NewRefreshTokenUseCase(userRepo, jwtManager, tokenBlocklist)
+	profileUC := authuc.NewGetProfileUseCase(userRepo)
+	authHandler := handler.NewAuthHandler(registerUC, loginUC, refreshUC, profileUC, jwtManager, tokenBlocklist)
+
+	listUsersUC := useruc.NewListUsersUseCase(userRepo)
+	updateUserUC := useruc.NewUpdateUserUseCase(userRepo)
+	deleteUserUC := useruc.NewDeleteUserUseCase(userRepo)
+	assignRoleUC := useruc.NewAssignRoleUseCase(userRepo, roleRepo)
+	removeRoleUC := useruc.NewRemoveRoleUseCase(userRepo, roleRepo)
+	userHandler := handler.NewUserHandler(listUsersUC, updateUserUC, deleteUserUC, assignRoleUC, removeRoleUC)
+
+	// Wire Beneficiary module
+	beneficiaryRepo := pg.NewBeneficiaryRepoPG(pgPool)
+	createBeneficiaryUC := beneficiaryuc.NewCreateBeneficiaryUseCase(beneficiaryRepo)
+	getBeneficiaryUC := beneficiaryuc.NewGetBeneficiaryUseCase(beneficiaryRepo)
+	listBeneficiariesUC := beneficiaryuc.NewListBeneficiariesUseCase(beneficiaryRepo)
+	updateBeneficiaryUC := beneficiaryuc.NewUpdateBeneficiaryUseCase(beneficiaryRepo)
+	deleteBeneficiaryUC := beneficiaryuc.NewDeleteBeneficiaryUseCase(beneficiaryRepo)
+	enrollInProgramUC := beneficiaryuc.NewEnrollInProgramUseCase(beneficiaryRepo, programRepo)
+	removeFromProgramUC := beneficiaryuc.NewRemoveFromProgramUseCase(beneficiaryRepo)
+	beneficiaryHandler := handler.NewBeneficiaryHandler(createBeneficiaryUC, getBeneficiaryUC, listBeneficiariesUC, updateBeneficiaryUC, deleteBeneficiaryUC, enrollInProgramUC, removeFromProgramUC)
 
 	// Set up router
-	r := router.NewRouter(healthHandler, cfg.App.FrontendURL)
+	r := router.NewRouter(router.Handlers{
+		Health:      healthHandler,
+		Program:     programHandler,
+		Auth:        authHandler,
+		User:        userHandler,
+		Beneficiary: beneficiaryHandler,
+	}, cfg.App.FrontendURL, jwtManager, tokenBlocklist)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.App.Port,

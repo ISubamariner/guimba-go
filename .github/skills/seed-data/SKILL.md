@@ -22,8 +22,9 @@ tests/fixtures/
 ├── pg/
 │   ├── 001_roles.sql
 │   ├── 002_users.sql
-│   ├── 003_borrowers.sql
-│   └── 004_debts.sql
+│   ├── 003_beneficiaries.sql
+│   ├── 004_programs.sql
+│   └── 005_program_beneficiaries.sql
 ├── mongo/
 │   ├── audit_logs.json
 │   └── documents.json
@@ -40,11 +41,12 @@ Always use `ON CONFLICT DO NOTHING` or upsert patterns:
 -- tests/fixtures/pg/001_roles.sql
 INSERT INTO roles (id, name, description) VALUES
   ('role-admin', 'admin', 'Full system access'),
-  ('role-manager', 'manager', 'Manage staff and records'),
   ('role-staff', 'staff', 'Create and edit records'),
   ('role-viewer', 'viewer', 'Read-only access')
 ON CONFLICT (id) DO NOTHING;
 ```
+
+> **Note**: System roles (admin, staff, viewer) and 13 permissions are also seeded via migration `000004_seed_system_roles.up.sql`. The migration seeds ensure roles exist in all environments, while fixture seeds are for test data resets.
 
 ## Password Hashing in Seeds
 

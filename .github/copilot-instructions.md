@@ -10,7 +10,7 @@ Guimba-GO is a full-stack municipal management system built with a **Go backend 
 - **Cache**: Redis (via Docker)
 - **Docs**: Swagger via swaggo/swag
 - **Migrations**: golang-migrate (SQL files for Postgres)
-- **Auth**: JWT (golang-jwt/jwt)
+- **Auth**: JWT (golang-jwt/jwt/v5), bcrypt (golang.org/x/crypto)
 
 ## Coding Standards
 

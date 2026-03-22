@@ -4,9 +4,9 @@
 
 ```go
 type Claims struct {
-    UserID string   `json:"user_id"`
-    Email  string   `json:"email"`
-    Roles  []string `json:"roles"`
+    UserID uuid.UUID `json:"user_id"`
+    Email  string    `json:"email"`
+    Roles  []string  `json:"roles"`
     jwt.RegisteredClaims
 }
 ```
@@ -35,22 +35,27 @@ r.Route("/api/v1", func(r chi.Router) {
 
         // Staff and above
         r.Group(func(r chi.Router) {
-            r.Use(middleware.RequireRole("staff", "manager", "admin"))
-            r.Get("/debts", debtHandler.List)
-            r.Post("/debts", debtHandler.Create)
+            r.Use(middleware.RequireRole("staff", "admin"))
+            r.Post("/programs", programHandler.Create)
+            r.Put("/programs/{id}", programHandler.Update)
+            r.Delete("/programs/{id}", programHandler.Delete)
+            r.Post("/beneficiaries", beneficiaryHandler.Create)
+            r.Put("/beneficiaries/{id}", beneficiaryHandler.Update)
+            r.Delete("/beneficiaries/{id}", beneficiaryHandler.Delete)
+            r.Post("/beneficiaries/{id}/programs", beneficiaryHandler.EnrollInProgram)
+            r.Delete("/beneficiaries/{id}/programs/{programId}", beneficiaryHandler.RemoveFromProgram)
         })
 
-        // Manager and above
-        r.Group(func(r chi.Router) {
-            r.Use(middleware.RequireRole("manager", "admin"))
-            r.Put("/debts/{id}/approve", debtHandler.Approve)
-        })
+        // Manager and above — reserved for future debt/beneficiary approval
+        // (Currently no "manager" role; only admin/staff/viewer are seeded)
 
         // Admin only
         r.Group(func(r chi.Router) {
             r.Use(middleware.RequireRole("admin"))
             r.Get("/users", userHandler.List)
+            r.Put("/users/{id}", userHandler.Update)
             r.Delete("/users/{id}", userHandler.Delete)
+            r.Post("/users/{id}/roles", userHandler.AssignRole)
         })
     })
 })
@@ -59,13 +64,13 @@ r.Route("/api/v1", func(r chi.Router) {
 ## Role Hierarchy
 
 ```
-admin    → full system access, user management
-manager  → approve/reject, manage staff-created records
-staff    → create/edit records, view own assignments
-viewer   → read-only access to dashboards and reports
+admin  → full system access, user management, role assignment
+staff  → create/edit programs and beneficiaries, read users
+viewer → read-only access to dashboards and reports
 ```
 
-Roles are stored as a string array on the user entity and JWT claims.
+3 system roles are seeded via migration `000004_seed_system_roles.up.sql` with 13 permissions.
+Roles are stored in a junction table (`user_roles`) and eagerly loaded with the User entity.
 
 ## Refresh Token Rotation
 

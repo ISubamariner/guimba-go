@@ -18,15 +18,23 @@ Manages JWT authentication, RBAC authorization, and all auth-related flows.
 ### Token Generation (`pkg/auth/jwt.go`)
 ```go
 type Claims struct {
-    UserID string   `json:"user_id"`
-    Email  string   `json:"email"`
-    Roles  []string `json:"roles"`
+    UserID uuid.UUID `json:"user_id"`
+    Email  string    `json:"email"`
+    Roles  []string  `json:"roles"`
     jwt.RegisteredClaims
 }
 
-func GenerateTokenPair(user *domain.User) (accessToken, refreshToken string, err error)
-func ValidateAccessToken(tokenString string) (*Claims, error)
-func ValidateRefreshToken(tokenString string) (*Claims, error)
+// JWTManager handles token generation and validation
+func NewJWTManager(secret string, accessDuration, refreshDuration time.Duration) *JWTManager
+func (m *JWTManager) GenerateTokenPair(userID uuid.UUID, email string, roles []string) (*TokenPair, error)
+func (m *JWTManager) ValidateToken(tokenString string) (*Claims, error)
+```
+
+### Token Blocklist (`infrastructure/cache/token_blocklist.go`)
+On logout or token refresh, old tokens are blocklisted in Redis with a TTL matching the token's remaining lifetime:
+```go
+blocklist.Block(ctx, claims.ID, remainingTTL)   // Add to blocklist
+blocklist.IsBlocked(ctx, claims.ID) (bool, error) // Check before processing
 ```
 
 ## Password Hashing
@@ -51,23 +59,17 @@ func CheckPassword(hashedPassword, password string) error {
 ## Auth Middleware (`internal/delivery/http/middleware/auth.go`)
 
 ```go
-func AuthMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        token := extractBearerToken(r)
-        if token == "" {
-            respondError(w, apperror.NewUnauthorized("missing auth token"))
-            return
-        }
-        claims, err := auth.ValidateAccessToken(token)
-        if err != nil {
-            respondError(w, apperror.NewUnauthorized("invalid or expired token"))
-            return
-        }
-        ctx := context.WithValue(r.Context(), userClaimsKey, claims)
-        next.ServeHTTP(w, r.WithContext(ctx))
-    })
-}
+// AuthMiddleware validates JWT from Authorization header and checks blocklist
+func AuthMiddleware(jwtManager *auth.JWTManager, blocklist *cache.TokenBlocklist) func(http.Handler) http.Handler
+
+// RequireRole checks that the authenticated user has at least one of the specified roles
+func RequireRole(roles ...string) func(http.Handler) http.Handler
 ```
+
+Context keys set by auth middleware:
+- `AuthUserIDKey` → `uuid.UUID`
+- `AuthEmailKey` → `string`
+- `AuthRolesKey` → `[]string`
 
 ## Role-Based Access Control
 
@@ -89,8 +91,12 @@ func RequireRole(roles ...string) func(http.Handler) http.Handler {
 
 ### Role Hierarchy
 ```
-admin > manager > staff > viewer
+admin  → full system access, user management, role assignment
+staff  → create/edit programs and beneficiaries, view users (read-only)
+viewer → read-only access to dashboards and reports
 ```
+
+> **Note**: 3 system roles are seeded via migration `000004_seed_system_roles.up.sql` with 13 permissions across programs, users, and beneficiaries categories.
 
 ### Route Registration with Auth
 ```go

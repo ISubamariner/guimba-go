@@ -635,9 +635,9 @@ For **each** domain aggregate (e.g., Debts, Users, Borrowers):
 - [ ] Write integration tests in `tests/integration/`
 
 Port order:
-1. [ ] **Programs** (core entity, simplest CRUD)
-2. [ ] **Users & Auth** (authentication, JWT, roles)
-3. [ ] **Beneficiaries** (relationships to programs)
+1. [x] **Programs** (core entity, simplest CRUD) — ✅ Complete: entity, repository interface, 5 use cases, PG repo, DTOs, handler with Swagger, routes, 35 unit tests
+2. [x] **Users & Auth** (authentication, JWT, roles) — ✅ Complete: full RBAC (users, roles, permissions tables), JWT auth (access+refresh tokens), bcrypt passwords, auth middleware (RequireRole), Redis token blocklist, register/login/refresh/logout/me + user CRUD + role assignment, 57 total unit tests
+3. [x] **Beneficiaries** (relationships to programs) — ✅ Complete: entity (full_name, email, phone, national_id, address, dob, status), program enrollment (many-to-many), 7 use cases (CRUD + enroll/remove from program), PG repo, DTOs, handler with Swagger, role-gated routes, 31 new tests (88 total)
 4. [ ] **Remaining modules** (iterate)
 
 ---

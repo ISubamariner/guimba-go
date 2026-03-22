@@ -22,6 +22,7 @@ Write: Write to DB → invalidate cache key
 | `{entity}:list:{hash}` | `debt:list:a1b2c3` | Paginated/filtered list (hash of query params) |
 | `{entity}:count` | `debt:count` | Total count cache |
 | `user:session:{token}` | `user:session:abc123` | Session/token storage |
+| `token_blocklist:{jti}` | `token_blocklist:abc-def` | JWT blocklist (logout/rotation) |
 
 ## TTL Strategy
 
@@ -30,6 +31,7 @@ Write: Write to DB → invalidate cache key
 | Short | 1–5 min | List queries, search results, counts |
 | Medium | 15–30 min | Single entity by ID |
 | Long | 1–24 hours | Config values, role definitions, static lookups |
+| Token-bound | remaining token lifetime | JWT blocklist entries (auto-expire with token) |
 
 ## Cache Wrapper Repository Pattern
 

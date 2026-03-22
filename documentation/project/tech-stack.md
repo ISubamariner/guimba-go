@@ -15,7 +15,8 @@
 | Migrations | **golang-migrate** | SQL-file based, CLI + library, reversible migrations |
 | API Docs | **swaggo/swag** | Generates Swagger/OpenAPI from Go comments |
 | Config | **viper** | Reads env vars, config files, supports multiple formats |
-| Auth | **golang-jwt/jwt** | Standard JWT library for Go |
+| Auth | **golang-jwt/jwt/v5** | Standard JWT library for Go |
+| Password Hashing | **golang.org/x/crypto/bcrypt** | Industry-standard password hashing |
 | Validation | **go-playground/validator** | Struct tag-based validation |
 | Logging | **slog** (stdlib) | Structured logging, built into Go 1.21+ |
 

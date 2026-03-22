@@ -11,6 +11,43 @@ Record of all documentation updates performed by the doc-sync skill. Newest entr
 - **Changes**: Brief description of what was updated in each file
 -->
 
+### 2026-03-22 — Phase 4 Beneficiaries Module Complete
+- **Trigger**: Phase 4 implementation — Beneficiaries with program enrollment (entity, 7 use cases, PG repo, DTOs, handler with Swagger, many-to-many program_beneficiaries junction, 31 new tests, 88 total)
+- **Files Updated**: file-tree.md, clean-architecture.md, testing-strategy.md, api/README.md, auth-rbac/references/auth-patterns.md, error-handling/references/error-codes.md, seed-data/SKILL.md, changelog.md
+- **Changes**:
+  - **file-tree.md**: Added 17 new files (migration, entity, repository, 7 use cases, PG repo, DTOs, handler, mock, 3 test files); updated key backend files table; updated implementation status table (entities/repos/use cases/persistence/handlers/DTOs/mocks/tests all now include Beneficiaries; 88 total tests)
+  - **clean-architecture.md**: Extended DI wiring with Beneficiary module injection (repo → 7 use cases → handler)
+  - **testing-strategy.md**: Added Beneficiaries row to coverage table (31 tests)
+  - **api/README.md**: Added Beneficiaries endpoint table (7 endpoints: CRUD + enroll/remove from program) + query parameters table
+  - **auth-patterns.md**: Added beneficiary routes to staff+ middleware chain example
+  - **error-codes.md**: Added BAD_REQUEST code row (was missing from table)
+  - **seed-data/SKILL.md**: Updated fixture file listing (replaced borrowers/debts with beneficiaries/programs/program_beneficiaries)
+
+### 2026-03-22 — Phase 4 Users & Auth Module Complete
+- **Trigger**: Phase 4 implementation — Users & Auth with full RBAC (JWT, bcrypt, Redis blocklist, role-based middleware, 6 migrations, 22 new unit tests)
+- **Files Updated**: copilot-instructions.md, tech-stack.md, auth-rbac/SKILL.md, auth-rbac/references/auth-patterns.md, redis-caching/SKILL.md, seed-data/SKILL.md, file-tree.md, clean-architecture.md, testing-strategy.md, api/README.md, changelog.md
+- **Changes**:
+  - **copilot-instructions.md**: Updated Auth line to `golang-jwt/jwt/v5` + `golang.org/x/crypto`
+  - **tech-stack.md**: Split Auth row into jwt/v5 + bcrypt separate entries
+  - **auth-rbac/SKILL.md**: Fixed role hierarchy (3 roles not 4: admin/staff/viewer, no manager), updated Claims struct (uuid.UUID), added TokenBlocklist section, updated middleware signatures
+  - **auth-rbac/references/auth-patterns.md**: Fixed role hierarchy, updated Claims struct, replaced stale middleware chain example with actual routes (programs write=staff+admin, users=admin), removed manager references
+  - **redis-caching/SKILL.md**: Added `token_blocklist:{jti}` key pattern, added token-bound TTL row
+  - **seed-data/SKILL.md**: Fixed role seeds (removed manager), added note about migration-based seeding
+  - **file-tree.md**: Major update — added 30+ new files (6 migrations, user/role entities, user/role repos, jwt.go, password.go, token_blocklist.go, user/role PG repos, auth middleware, auth/user DTOs, auth/user handlers, auth/user use cases, 3 mocks, 2 test files); updated key backend files table; updated implementation status table
+  - **clean-architecture.md**: Extended DI wiring example with Auth + User module injection (JWTManager, TokenBlocklist, repos, use cases, handlers)
+  - **testing-strategy.md**: Added Users & Auth row to coverage table (22 tests)
+  - **api/README.md**: Added Auth endpoints table (register, login, refresh, me, logout) and Users endpoints table (list, update, delete, assign role) with Auth column
+
+### 2026-03-22 — Phase 4 Programs Module Complete
+- **Trigger**: Phase 4 implementation — Programs domain module (entity, repository, 5 use cases, PG persistence, DTOs, handler with Swagger, router, 35 unit tests)
+- **Files Updated**: MASTERPLAN.md, documentation/architecture/clean-architecture.md, documentation/architecture/testing-strategy.md, documentation/api/README.md, .github/skills/doc-sync/references/file-tree.md, .github/skills/doc-sync/references/changelog.md
+- **Changes**:
+  - **MASTERPLAN.md**: Checked off Programs in Phase 4 port order with completion summary
+  - **clean-architecture.md**: Replaced "Phase 4 will add" placeholder with actual Programs wiring code (repo → use cases → handler → router.Handlers struct)
+  - **testing-strategy.md**: Added "Current Test Coverage" table showing 9 infrastructure + 26 Programs tests
+  - **api/README.md**: Added "Available Endpoints" section with Programs CRUD routes and query parameters table
+  - **file-tree.md**: Major update — replaced 8 "empty/awaiting Phase 4" entries with actual file descriptions (entity, errors, repository interface, 5 use cases, PG repo, DTOs, handler, router); added mocks and 3 new test files; updated implementation status table (9 items changed from 🔒 to ✅); updated key backend files table with 6 new entries; updated main.go description
+
 ### 2026-03-22 — Phase 3 Core Backend Setup Complete
 - **Trigger**: Phase 3 implementation — config, database connections, cache, HTTP layer, migrations, swagger, tests, main.go wiring
 - **Files Updated**: MASTERPLAN.md, .github/copilot-instructions.md, AGENTS.md, .github/instructions/go-backend.instructions.md, documentation/architecture/testing-strategy.md, documentation/architecture/clean-architecture.md, documentation/project/setup-guide.md, .github/skills/env-config/SKILL.md, .github/skills/doc-sync/references/file-tree.md, .github/skills/doc-sync/references/changelog.md

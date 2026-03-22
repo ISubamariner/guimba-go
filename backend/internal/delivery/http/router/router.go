@@ -9,10 +9,21 @@ import (
 	_ "github.com/ISubamariner/guimba-go/backend/docs"
 	"github.com/ISubamariner/guimba-go/backend/internal/delivery/http/handler"
 	"github.com/ISubamariner/guimba-go/backend/internal/delivery/http/middleware"
+	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/cache"
+	"github.com/ISubamariner/guimba-go/backend/pkg/auth"
 )
 
+// Handlers holds all HTTP handlers for route registration.
+type Handlers struct {
+	Health      *handler.HealthHandler
+	Program     *handler.ProgramHandler
+	Auth        *handler.AuthHandler
+	User        *handler.UserHandler
+	Beneficiary *handler.BeneficiaryHandler
+}
+
 // NewRouter creates and configures the Chi router with all middleware and routes.
-func NewRouter(healthHandler *handler.HealthHandler, frontendURL string) chi.Router {
+func NewRouter(h Handlers, frontendURL string, jwtManager *auth.JWTManager, blocklist *cache.TokenBlocklist) chi.Router {
 	r := chi.NewRouter()
 
 	// Global middleware stack
@@ -32,16 +43,70 @@ func NewRouter(healthHandler *handler.HealthHandler, frontendURL string) chi.Rou
 	}))
 
 	// Health check (outside /api/v1 — always accessible)
-	r.Get("/health", healthHandler.Health)
+	r.Get("/health", h.Health.Health)
 
 	// Swagger UI
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
+	// Auth middleware
+	requireAuth := middleware.AuthMiddleware(jwtManager, blocklist)
+
 	// API v1 routes
 	r.Route("/api/v1", func(r chi.Router) {
-		// Future routes will be registered here:
-		// r.Route("/programs", func(r chi.Router) { ... })
-		// r.Route("/users", func(r chi.Router) { ... })
+		// Public auth routes
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/register", h.Auth.Register)
+			r.Post("/login", h.Auth.Login)
+			r.Post("/refresh", h.Auth.Refresh)
+
+			// Authenticated auth routes
+			r.Group(func(r chi.Router) {
+				r.Use(requireAuth)
+				r.Get("/me", h.Auth.Me)
+				r.Post("/logout", h.Auth.Logout)
+			})
+		})
+
+		// Programs (public read, authenticated write)
+		r.Route("/programs", func(r chi.Router) {
+			r.Get("/", h.Program.List)
+			r.Get("/{id}", h.Program.Get)
+
+			r.Group(func(r chi.Router) {
+				r.Use(requireAuth)
+				r.Use(middleware.RequireRole("admin", "staff"))
+				r.Post("/", h.Program.Create)
+				r.Put("/{id}", h.Program.Update)
+				r.Delete("/{id}", h.Program.Delete)
+			})
+		})
+
+		// Users (admin only)
+		r.Route("/users", func(r chi.Router) {
+			r.Use(requireAuth)
+			r.Use(middleware.RequireRole("admin"))
+			r.Get("/", h.User.List)
+			r.Put("/{id}", h.User.Update)
+			r.Delete("/{id}", h.User.Delete)
+			r.Post("/{id}/roles", h.User.AssignRole)
+			r.Delete("/{id}/roles/{roleId}", h.User.RemoveRole)
+		})
+
+		// Beneficiaries (authenticated read, staff+ write)
+		r.Route("/beneficiaries", func(r chi.Router) {
+			r.Use(requireAuth)
+			r.Get("/", h.Beneficiary.List)
+			r.Get("/{id}", h.Beneficiary.Get)
+
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireRole("admin", "staff"))
+				r.Post("/", h.Beneficiary.Create)
+				r.Put("/{id}", h.Beneficiary.Update)
+				r.Delete("/{id}", h.Beneficiary.Delete)
+				r.Post("/{id}/programs", h.Beneficiary.EnrollInProgram)
+				r.Delete("/{id}/programs/{programId}", h.Beneficiary.RemoveFromProgram)
+			})
+		})
 	})
 
 	return r

@@ -5,6 +5,7 @@
 | Code | HTTP Status | When To Use | Example Message |
 |:---|:---|:---|:---|
 | `VALIDATION_ERROR` | 400 | Input fails struct tag validation or business rule | `"email is required"` |
+| `BAD_REQUEST` | 400 | Malformed request (bad JSON, invalid UUID) | `"Invalid JSON request body"` |
 | `UNAUTHORIZED` | 401 | No token, expired token, invalid token | `"invalid or expired token"` |
 | `FORBIDDEN` | 403 | Valid token but insufficient role | `"insufficient permissions"` |
 | `NOT_FOUND` | 404 | Entity doesn't exist in DB | `"debt not found"` |

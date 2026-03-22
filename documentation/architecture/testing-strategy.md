@@ -66,6 +66,15 @@ cd backend && go test -coverprofile=coverage.out ./tests/... && go tool cover -h
 - **Full-Stack Validation**: Tests can call API directly + assert in browser + verify DB state
 - **3 scope levels**: UI-only specs, API validation specs, visual regression specs
 
+## Current Test Coverage
+
+| Domain | Unit Tests | Integration Tests | E2E Tests |
+|:---|:---|:---|:---|
+| **Infrastructure** | 9 tests (apperror, middleware, health DTO) | — | — |
+| **Programs** | 26 tests (entity validation, 5 use cases, handler CRUD) | — (pending) | — |
+| **Users & Auth** | 22 tests (register, login, refresh, profile, logout, JWT, blocklist, user CRUD, role assignment) | — (pending) | — |
+| **Beneficiaries** | 31 tests (entity validation, 7 use cases incl. enrollment, handler CRUD + enrollment) | — (pending) | — |
+
 ## Conventions
 
 - Every use case gets at least one unit test (table-driven)
