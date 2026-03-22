@@ -40,7 +40,7 @@ infrastructure/persistence ─────────┘  (implements the inter
 
 | Layer | Can Import | Cannot Import |
 |:---|:---|:---|
-| `domain/` | Only Go stdlib | `usecase/`, `infrastructure/`, `delivery/`, any third-party package |
+| `domain/` | Only Go stdlib + `github.com/google/uuid` (accepted ID primitive) | `usecase/`, `infrastructure/`, `delivery/`, any other third-party package |
 | `usecase/` | `domain/` | `infrastructure/`, `delivery/` |
 | `infrastructure/` | `domain/` (to implement interfaces) | `usecase/`, `delivery/` |
 | `delivery/` | `usecase/`, `domain/` | `infrastructure/` (injected at startup in `main.go`) |

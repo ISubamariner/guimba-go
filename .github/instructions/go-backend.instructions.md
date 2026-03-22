@@ -20,7 +20,8 @@ infrastructure/persistence ─────────────┘ (implement
 
 ## Domain Layer (`internal/domain/`)
 - Contains entities, repository interfaces, service interfaces, value objects
-- ZERO external dependencies (no frameworks, no DB drivers)
+- ZERO external framework dependencies (no HTTP frameworks, no DB drivers, no ORM)
+- **Accepted exception**: `github.com/google/uuid` is allowed in the domain layer as a primitive type for entity IDs
 - Entities are pure Go structs with business validation methods
 - Repository interfaces define the contract; implementations live in `infrastructure/`
 

@@ -37,7 +37,7 @@
 - `chore:` — tooling, deps, config changes
 
 ## Branch Strategy
-- `main` — production-ready
+- `master` — production-ready
 - `develop` — integration branch
 - `feat/<name>` — feature branches
 - `fix/<name>` — bugfix branches

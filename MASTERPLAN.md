@@ -14,6 +14,7 @@
 | Redis        | ✅ 7-alpine (Docker, port 6380) |
 | Copilot CLI  | ✅ Active       |
 | Custom Instructions/Agents/Skills | ✅ Configured (Phase 0 complete) |
+| MCP Servers | ✅ 9 servers (postgres, mongodb, redis, memory, filesystem, playwright, chrome-devtools, context7, markitdown) |
 
 ---
 
@@ -159,8 +160,11 @@ Solution: Run `go install github.com/swaggo/swag/cmd/swag@latest` and ensure `$G
 Guimba-GO/
 ├── .github/
 │   │
+│   ├── copilot/
+│   │   └── mcp.json                        ← MCP server config (remote coding agent, mcpServers key)
+│   │
 │   ├── copilot-instructions.md            ← LAYER 1: Global project context (ALWAYS loaded)
-│   │                                         Tech stack, coding standards, project overview
+│   │                                         Tech stack, coding standards, MCP usage rules
 │   │
 │   ├── instructions/                      ← LAYER 2: Path-specific instructions
 │   │   ├── go-backend.instructions.md     ← applyTo: "backend/**/*.go"
@@ -201,11 +205,54 @@ Guimba-GO/
 │           └── references/
 │               └── changelog.md           ← Audit trail of all documentation updates
 │
-├── AGENTS.md                              ← High-level project description + conventions
+├── AGENTS.md                              ← High-level project description + conventions + MCP reference
 │                                             (treated as primary instructions alongside copilot-instructions.md)
+│
+├── .vscode/
+│   └── mcp.json                           ← MCP server config (VS Code Chat, servers key)
+│
+├── documentation/
+│   └── copilot-config/
+│       ├── README.md                      ← Copilot configuration overview
+│       └── mcp-servers.md                 ← Comprehensive MCP server reference
 │
 └── ... (project code)
 ```
+
+### MCP Server Configuration (Layer 5: Tool Providers)
+
+MCP servers extend Copilot with live tool access — direct database queries, browser automation, file operations, and library documentation. Unlike instructions/agents/skills (which guide behavior), MCP servers give Copilot **real-time data access**.
+
+**Config file locations** (all three must stay in sync):
+
+| File | Used By | Key Format |
+|:---|:---|:---|
+| `~/.copilot/mcp-config.json` | **Copilot CLI** (terminal `copilot` command) | `mcpServers` |
+| `.vscode/mcp.json` | **VS Code Chat** (Copilot Chat in editor) | `servers` |
+| `.github/copilot/mcp.json` | **Remote Copilot coding agent** (GitHub.com) | `mcpServers` |
+
+**Configured servers (9):**
+
+| Server | Package | What It Provides |
+|:---|:---|:---|
+| `postgres` | `@modelcontextprotocol/server-postgres` | Direct SQL queries on PostgreSQL (schema verification, data checks) |
+| `mongodb` | `mongodb-mcp-server` | Read-only MongoDB access (audit logs, document schemas) |
+| `redis` | `@modelcontextprotocol/server-redis` | Redis key/value ops (cache inspection, token blocklist) |
+| `memory` | `@modelcontextprotocol/server-memory` | Persistent key-value store for session context |
+| `filesystem` | `@modelcontextprotocol/server-filesystem` | Project file read/write (scoped to project root) |
+| `playwright` | `@playwright/mcp` | Browser automation, E2E testing, screenshots |
+| `chrome-devtools` | `chrome-devtools-mcp` | Chrome DevTools Protocol (network, performance, CSS) |
+| `context7` | `@upstash/context7-mcp` | Up-to-date library documentation lookup |
+| `markitdown` | `markitdown-mcp-npx` | Convert PDF/DOCX/XLSX to Markdown for analysis |
+
+**Usage rules:**
+- Database servers require Docker running (`docker compose up -d`)
+- **Query before coding** — use `postgres` MCP to verify schemas before writing Go repository code
+- **Use `context7` for docs** — always check current library APIs instead of relying on training data
+- MongoDB is read-only — writes go through Go application code
+- Redis external port is 6380 (mapped to container's 6379)
+
+📖 **Full reference**: [`documentation/copilot-config/mcp-servers.md`](documentation/copilot-config/mcp-servers.md)
 
 ### Skill Validation Checklist (from Anthropic's Guide)
 
@@ -249,6 +296,12 @@ Use this before considering a skill "done":
   - [x] `bug-tracker/SKILL.md` — persistent bug memory with Issue→Cause→Fix format, escalation rules (from Connected Trio: Learner/Debugger)
   - [x] `doc-sync/SKILL.md` — long-term memory manager, 5-tier doc registry, changelog audit trail (from Connected Trio: Skill Monitor)
 - [x] Validate each skill against the checklist above
+- [x] Configure MCP servers:
+  - [x] `~/.copilot/mcp-config.json` — Copilot CLI config (9 servers)
+  - [x] `.vscode/mcp.json` — VS Code Chat config (9 servers)
+  - [x] `.github/copilot/mcp.json` — Remote coding agent config (9 servers)
+  - [x] Document MCP servers in `documentation/copilot-config/mcp-servers.md`
+  - [x] Add MCP usage guidance to all instruction files
 
 ---
 
@@ -336,7 +389,7 @@ The backend follows **Clean Architecture** (Uncle Bob) — dependencies point in
 ```
 
 **Key Rules:**
-- **Domain** (`domain/`) has ZERO external dependencies — no frameworks, no DB drivers, no HTTP
+- **Domain** (`domain/`) has ZERO external framework dependencies — no HTTP frameworks, no DB drivers, no ORM. Exception: `github.com/google/uuid` is accepted as a primitive type for entity IDs.
 - **Use Cases** (`usecase/`) depend only on Domain interfaces
 - **Infrastructure** (`infrastructure/`) implements Domain interfaces (DB, cache, external APIs)
 - **Delivery** (`delivery/`) is the outermost layer (HTTP handlers, middleware, routes)
@@ -417,26 +470,8 @@ Guimba-GO/
 │   ├── migrations/                    ← SQL migration files (golang-migrate)
 │   └── docs/                          ← Swagger generated docs
 │
-├── tests/                             ← ALL automated tests (centralized)
-│   ├── unit/                          ← Unit tests (no external dependencies)
-│   │   ├── domain/                    ← Entity & value object tests
-│   │   │   ├── program_test.go
-│   │   │   └── email_test.go
-│   │   ├── usecase/                   ← Use case tests (mocked repositories)
-│   │   │   ├── create_program_test.go
-│   │   │   └── authenticate_test.go
-│   │   └── delivery/                  ← Handler tests (mocked use cases)
-│   │       └── program_handler_test.go
-│   │
-│   ├── integration/                   ← Integration tests (real DB via testcontainers)
-│   │   ├── persistence/              ← Repository implementation tests
-│   │   │   └── program_repo_pg_test.go
-│   │   └── api/                      ← Full HTTP endpoint tests
-│   │       └── program_api_test.go
-│   │
-│   ├── e2e/                           ← End-to-end tests (Go-based API flow tests)
-│   │   └── flows/
-│   │       └── program_flow_test.go
+├── tests/                             ← Cross-cutting tests & Playwright E2E
+│   │                                     (Go tests live in backend/tests/ due to internal pkg visibility)
 │   │
 │   ├── playwright/                    ← Playwright E2E + visual regression tests
 │   │   ├── package.json              ← Playwright dependencies (isolated from frontend)
@@ -463,22 +498,14 @@ Guimba-GO/
 │   │   └── snapshots/               ← Visual regression baseline screenshots
 │   │       └── .gitkeep
 │   │
-│   ├── fixtures/                      ← Shared test data (JSON, SQL seeds)
-│   │   ├── programs.json
-│   │   └── seed.sql
-│   │
-│   ├── mocks/                         ← Generated/manual mock implementations
-│   │   ├── mock_program_repository.go
-│   │   └── mock_program_service.go
-│   │
-│   └── helpers/                       ← Shared test utilities
-│       ├── test_db.go                 ← Test database setup/teardown
-│       └── assertions.go             ← Custom assertion helpers
+│   └── fixtures/                      ← Shared test data (JSON, SQL seeds)
+│       ├── programs.json
+│       └── seed.sql
 │
 ├── frontend/                          ← Next.js app
 │   ├── package.json
-│   ├── next.config.js
-│   ├── tailwind.config.ts             ← Tailwind config with design tokens
+│   ├── next.config.ts                 ← Next.js config (TypeScript)
+│   ├── postcss.config.mjs             ← PostCSS config (Tailwind v4 via @tailwindcss/postcss)
 │   ├── src/
 │   │   ├── app/                       ← App Router pages
 │   │   │   └── globals.css            ← Global styles + CSS custom properties (design tokens)
@@ -545,23 +572,23 @@ infrastructure/persistence ─────────┘  (implements the inter
 
 ### Testing Strategy
 
-All automated tests live in the centralized `tests/` folder at project root:
+Go tests live in `backend/tests/` due to Go's `internal` package visibility rules. Root `tests/` is reserved for Playwright E2E, shared fixtures, and cross-cutting helpers.
 
 | Test Type | Location | What It Tests | Dependencies |
 |:---|:---|:---|:---|
-| **Unit** | `tests/unit/` | Domain logic, use cases, handlers in isolation | Mocks only (no DB, no network) |
-| **Integration** | `tests/integration/` | Repository implementations, API endpoints | Real DB via testcontainers-go |
-| **E2E (Go)** | `tests/e2e/` | Full API flow tests | Running backend + DB |
+| **Unit** | `backend/tests/unit/` | Domain logic, use cases, handlers in isolation | Mocks only (no DB, no network) |
+| **Integration** | `backend/tests/integration/` | Repository implementations, API endpoints | Real DB via testcontainers-go |
+| **E2E (Go)** | `backend/tests/e2e/` | Full API flow tests | Running backend + DB |
 | **E2E (Playwright)** | `tests/playwright/specs/` | Browser UI flows, full-stack validation, visual regression | Running frontend + backend + DB |
 | **Frontend Unit** | `frontend/__tests__/` | React components, hooks, API client | Jest/Vitest |
 
 **Test conventions:**
-- Unit tests use mocks from `tests/mocks/`
+- Unit tests use mocks from `backend/tests/mocks/`
 - Integration tests use fixtures from `tests/fixtures/`
-- Test helpers (DB setup, custom assertions) live in `tests/helpers/`
-- Run all backend tests: `go test ./tests/...`
-- Run only unit: `go test ./tests/unit/...`
-- Run only integration: `go test -tags=integration ./tests/integration/...`
+- Test helpers (DB setup, custom assertions) live in `backend/tests/helpers/`
+- Run all backend tests: `cd backend && go test ./tests/...`
+- Run only unit: `cd backend && go test ./tests/unit/...`
+- Run only integration: `cd backend && go test -tags=integration ./tests/integration/...`
 - Run Playwright E2E: `cd tests/playwright && npx playwright test`
 - Run Playwright visual regression: `cd tests/playwright && npx playwright test --update-snapshots` (to update baselines)
 - Run Playwright specific spec: `cd tests/playwright && npx playwright test specs/auth/login.spec.ts`
@@ -677,8 +704,10 @@ Port order:
 4. **API Versioning** — Use `/api/v1/...` prefix from the start
 5. **Error Handling Pattern** — Go has no exceptions; design an error response struct early
 6. **Logging** — Use `slog` (stdlib in Go 1.21+) or `zerolog`
-7. **Testing Strategy** — Centralized `tests/` folder; table-driven unit tests, testcontainers for integration, Playwright for browser E2E + visual regression, all routed through `go test ./tests/...` (Go) or `npx playwright test` (browser)
+7. **Testing Strategy** — Go tests in `backend/tests/` (due to `internal` visibility); Playwright E2E in root `tests/playwright/`; table-driven unit tests, testcontainers for integration, all routed through `cd backend && go test ./tests/...` (Go) or `cd tests/playwright && npx playwright test` (browser)
 8. **Hot Reload for Go** — Use `air` (cosmtrek/air) for live-reloading during dev
 9. **CI/CD Pipeline** — GitHub Actions workflow for lint + test + build
 10. **Rate Limiting** — If this is a public-facing API, add rate limiting middleware
 11. **Connection Pooling** — `pgx` handles this natively; Redis has built-in pool in `go-redis`
+12. **MCP Server Sync** — When adding/removing MCP servers, update all 3 config files (`~/.copilot/mcp-config.json`, `.vscode/mcp.json`, `.github/copilot/mcp.json`) and the reference doc (`documentation/copilot-config/mcp-servers.md`)
+13. **Query-First Development** — Always query live databases via MCP before writing persistence code; use `context7` for up-to-date library APIs instead of guessing

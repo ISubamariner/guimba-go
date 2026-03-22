@@ -34,7 +34,7 @@ All API errors use this shape:
 Use Conventional Commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
 
 ### Branch Strategy
-- `main` — production-ready
+- `master` — production-ready
 - `develop` — integration branch
 - `feat/<name>` — feature branches
 - `fix/<name>` — bugfix branches

@@ -16,7 +16,7 @@ Guimba-GO is a full-stack municipal management system built with a **Go backend 
 
 ### Go Backend
 - **Clean Architecture**: `domain/` → `usecase/` → `infrastructure/` → `delivery/`
-- Domain layer (`internal/domain/`) has ZERO external dependencies
+- Domain layer (`internal/domain/`) has ZERO external framework dependencies (exception: `github.com/google/uuid` accepted as ID primitive)
 - Use cases depend only on domain interfaces; infrastructure implements them
 - Dependency injection wired in `cmd/server/main.go`
 - DTOs in `delivery/http/dto/` — never expose domain entities directly in HTTP responses

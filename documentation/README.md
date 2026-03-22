@@ -26,7 +26,8 @@ documentation/
 ├── prompts/                        ← System prompts & AI instructions
 │   ├── business-logic-reference.md ← Complete business logic extracted from guimba-debt-tracker
 │   ├── connected-trio-original.md  ← The original "Connected Trio" prompt (reference)
-│   └── design-decisions.md         ← Why we chose this prompt architecture
+│   ├── design-decisions.md         ← Why we chose this prompt architecture
+│   └── rebrand-and-extend.prompt.md ← Rebrand & extension prompt for Go rewrite
 │
 └── copilot-config/                 ← Mirror of .github/ Copilot configuration
     ├── README.md                   ← Index of all Copilot layers
