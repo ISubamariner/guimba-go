@@ -11,6 +11,21 @@ Record of all documentation updates performed by the doc-sync skill. Newest entr
 - **Changes**: Brief description of what was updated in each file
 -->
 
+### 2026-03-22 — Project File Tree & File Registry Created
+- **Trigger**: Need for a running inventory of all project files with descriptions for orientation and staleness detection
+- **Files Updated**: .github/skills/doc-sync/references/file-tree.md (NEW), .github/skills/doc-sync/SKILL.md, .github/skills/doc-sync/references/changelog.md
+- **Changes**:
+  - Created `references/file-tree.md` — complete file tree of every file in the project with icons, descriptions, implementation status table, and update protocol
+  - Updated `SKILL.md` — added file-tree.md to Tier 5 registry and business-logic-reference.md to Tier 6 registry
+
+### 2026-03-22 — Business Logic Reference Extracted from guimba-debt-tracker
+- **Trigger**: Full extraction of business logic from original Python/FastAPI project (guimba-debt-tracker v3.1.0) for behavioral parity during Go rewrite
+- **Files Updated**: documentation/prompts/business-logic-reference.md (NEW), documentation/README.md, MASTERPLAN.md, .github/skills/doc-sync/references/changelog.md
+- **Changes**:
+  - Created `documentation/prompts/business-logic-reference.md` — comprehensive reference covering all 8 domain entities, 3 value objects, 10+ business rule sets, 10 service workflows, auth flows, background jobs, dashboard stats, OCR, audit system, error taxonomy, and 62+ API endpoints
+  - Updated `documentation/README.md` — added business-logic-reference.md to directory map and quick links table
+  - Updated `MASTERPLAN.md` — added "Business Logic Reference" section before Phase 1 with summary and usage rule
+
 ### 2026-03-19 — MongoDB Added (Polyglot Persistence)
 - **Trigger**: Decision to add MongoDB alongside PostgreSQL for flexible per-module database choice
 - **Files Updated**: MASTERPLAN.md, copilot-instructions.md, go-backend.instructions.md, database.instructions.md, api-builder.agent.md, docker-compose-services/SKILL.md, compose-patterns.md, documentation/project/tech-stack.md, documentation/project/setup-guide.md, documentation/architecture/clean-architecture.md

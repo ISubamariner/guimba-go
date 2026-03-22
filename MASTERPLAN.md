@@ -252,6 +252,28 @@ Use this before considering a skill "done":
 
 ---
 
+## Business Logic Reference (Original Project)
+
+All business processes, domain rules, entity behaviors, and validation workflows from the original `guimba-debt-tracker` (Python/FastAPI v3.1.0) have been extracted into a comprehensive reference document:
+
+📖 **[`documentation/prompts/business-logic-reference.md`](documentation/prompts/business-logic-reference.md)**
+
+This document is the **single source of truth** for behavioral parity during the Go rewrite. It covers:
+- All 8 domain entities with field definitions and methods
+- 3 value objects (Money, Address, UserRole)
+- 10+ business rule sets (debt creation, payments, refunds, overdue detection, etc.)
+- 10 service-layer workflows with step-by-step validation sequences
+- Complete auth flow (registration, login, token rotation, password reset, blocklist)
+- Background jobs (daily overdue notifications via Celery/Redis)
+- Dashboard statistics and audit system specifications
+- OCR receipt scanning workflow
+- Full API endpoint map (62+ endpoints across 11 modules)
+- Error taxonomy mapping
+
+> **Rule**: Before implementing any feature, consult this reference to ensure the Go implementation matches the original business logic.
+
+---
+
 ## Phase 1: Install Missing Tools
 
 - [x] Install Go (latest stable, currently 1.24.x) — https://go.dev/dl/

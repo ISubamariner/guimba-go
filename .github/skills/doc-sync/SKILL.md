@@ -72,6 +72,7 @@ These are all the files this skill is responsible for keeping in sync:
 | `.github/skills/seed-data/references/fixture-templates.md` | SQL/JSON fixture templates, seed runner code | New entities or fixture format changes |
 | `.github/skills/env-config/references/config-template.md` | Config struct, loader, .env.example template | Config fields or loading strategy changes |
 | `.github/skills/doc-sync/references/changelog.md` | Record of all doc updates | Every time this skill runs |
+| `.github/skills/doc-sync/references/file-tree.md` | Project file tree inventory with descriptions | Every time files are added, renamed, or removed |
 
 ### Tier 6: Documentation Hub (`documentation/`)
 | File | Purpose | Update When |
@@ -84,6 +85,7 @@ These are all the files this skill is responsible for keeping in sync:
 | `documentation/architecture/design-system.md` | CSS & token architecture | Design system evolves |
 | `documentation/api/README.md` | API overview | API versioning or auth changes |
 | `documentation/prompts/design-decisions.md` | Prompt architecture rationale | New skills added, architecture decisions |
+| `documentation/prompts/business-logic-reference.md` | Business logic from original project | New rules discovered, behavioral parity gaps found |
 | `documentation/copilot-config/README.md` | Copilot config index | New skills, agents, or instructions added |
 
 ## Workflow

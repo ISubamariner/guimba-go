@@ -24,6 +24,7 @@ documentation/
 │   └── README.md                   ← API overview (Swagger lives in backend/docs/)
 │
 ├── prompts/                        ← System prompts & AI instructions
+│   ├── business-logic-reference.md ← Complete business logic extracted from guimba-debt-tracker
 │   ├── connected-trio-original.md  ← The original "Connected Trio" prompt (reference)
 │   └── design-decisions.md         ← Why we chose this prompt architecture
 │
@@ -39,6 +40,7 @@ documentation/
 | What | Where |
 |:---|:---|
 | Master plan | [`/MASTERPLAN.md`](../MASTERPLAN.md) |
+| **Business logic reference** | [`documentation/prompts/business-logic-reference.md`](prompts/business-logic-reference.md) |
 | Global Copilot instructions | [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) |
 | Project conventions | [`/AGENTS.md`](../AGENTS.md) |
 | Bug log | [`.github/skills/bug-tracker/references/bug-log.md`](../.github/skills/bug-tracker/references/bug-log.md) |
