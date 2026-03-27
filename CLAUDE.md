@@ -8,6 +8,17 @@ Guimba-GO is a municipal social protection management system (rewrite of a Pytho
 
 **Module**: `github.com/ISubamariner/guimba-go/backend`
 
+## Tech Stack
+
+- **Go** 1.26+, **Chi** v5 router, **pgx** v5 (PostgreSQL), **mongo-go-driver** v2 (MongoDB), **go-redis** v9
+- **Next.js** 15+ (App Router, TypeScript strict, Tailwind CSS)
+- **Auth**: golang-jwt/jwt/v5 (15min access token, 7d refresh token), bcrypt, Redis token blocklist
+- **Validation**: go-playground/validator v10 (struct tags on DTOs)
+- **Config**: Viper (reads `.env` from `./` and `../../` relative to working dir)
+- **Migrations**: golang-migrate/v4 (auto-run on server startup)
+- **Docs**: swaggo/swag (Swagger/OpenAPI)
+- **Logging**: `log/slog` (stdlib)
+
 ## Build & Run Commands
 
 ```bash
@@ -35,9 +46,6 @@ cd backend && go test -tags=integration ./tests/integration/...
 # Generate Swagger docs
 cd backend && swag init -g cmd/server/main.go -o docs/
 
-# Run database migrations manually
-# Migrations auto-run on server startup via golang-migrate
-
 # Frontend
 cd frontend && npm install && npm run dev
 
@@ -50,33 +58,57 @@ cd tests/playwright && npx playwright test
 ### Clean Architecture Layers (dependencies point inward only)
 
 ```
-delivery/http/handler → usecase → domain/repository (interface)
-                                        ↑
-infrastructure/persistence ─────────────┘ (implements)
+delivery/http/handler -> usecase -> domain/repository (interface)
+                                         |
+infrastructure/persistence --------------' (implements)
 ```
 
 | Layer | Path | Rules |
 |:---|:---|:---|
-| **Domain** | `backend/internal/domain/` | Zero external deps (exception: `google/uuid`). Entities, repository interfaces, value objects. |
+| **Domain** | `backend/internal/domain/` | Zero external deps (exception: `google/uuid`). Entities, repository interfaces, domain errors (`entity/errors.go`). |
 | **Use Cases** | `backend/internal/usecase/` | One file per use case, grouped by aggregate. Depends only on domain interfaces. |
-| **Infrastructure** | `backend/internal/infrastructure/` | Implements domain interfaces. DB drivers, cache, config. PG repos in `persistence/pg/`, Mongo in `persistence/mongo/`. |
+| **Infrastructure** | `backend/internal/infrastructure/` | Implements domain interfaces. DB drivers, cache, config. PG repos in `persistence/pg/`. |
 | **Delivery** | `backend/internal/delivery/http/` | Handlers, middleware, router, DTOs. Never import infrastructure directly (injected in `main.go`). |
 
 ### Dependency Injection
 
-All wiring happens in `backend/cmd/server/main.go`: config → DB pools → repos → use cases → handlers → router. Follow the existing pattern when adding new modules.
+All wiring happens in `backend/cmd/server/main.go`: config -> DB pools -> repos -> use cases -> handlers -> `router.Handlers` struct -> router. When adding a new module, add a field to the `Handlers` struct in `router.go` and wire it in `main.go`.
+
+### Middleware Stack (order matters)
+
+RequestID -> Recovery -> Logger -> RealIP -> Compress -> CORS -> (route-level: AuthMiddleware -> RequireRole)
+
+Custom middleware in `delivery/http/middleware/`: `request_id.go`, `recovery.go`, `logger.go`, `auth.go` (includes `RequireRole`).
+
+### API Routes
+
+All under `/api/v1`. Also: `GET /health` (no auth), `GET /swagger/*` (Swagger UI).
+
+| Route | Methods | Auth | Roles |
+|:---|:---|:---|:---|
+| `/auth/register, /login, /refresh` | POST | Public | — |
+| `/auth/me, /auth/logout` | GET, POST | Required | Any |
+| `/programs` | GET, GET/:id | Public | — |
+| `/programs` | POST, PUT/:id, DELETE/:id | Required | admin, staff |
+| `/users` | GET, PUT/:id, DELETE/:id | Required | admin |
+| `/users/{id}/roles` | POST, DELETE/:roleId | Required | admin |
+| `/beneficiaries` | GET, GET/:id | Required | Any |
+| `/beneficiaries` | POST, PUT/:id, DELETE/:id | Required | admin, staff |
+| `/beneficiaries/{id}/programs` | POST, DELETE/:programId | Required | admin, staff |
+| `/tenants` | GET, GET/:id, POST, PUT/:id, DELETE/:id | Required | admin, landlord |
+| `/tenants/{id}/deactivate` | PUT | Required | admin, landlord |
 
 ### Key Directories
 
-- `backend/pkg/` — Shared utilities (`apperror/`, `logger/`, `auth/`, `validator/`)
-- `backend/migrations/` — SQL migration files (`{number}_{description}.up.sql` / `.down.sql`)
+- `backend/pkg/` — `apperror/` (error types + HTTP response helper), `logger/` (slog setup), `auth/` (JWT manager + password hashing), `validator/` (struct validation)
+- `backend/migrations/` — Sequential SQL files (`000001_{name}.up.sql` / `.down.sql`)
 - `backend/docs/` — Auto-generated Swagger (do not edit manually)
-- `backend/tests/` — All Go tests (unit, integration, e2e) — must be here due to `internal` package visibility
+- `backend/tests/` — All Go tests (unit, integration) — must be here due to `internal` package visibility
 - `backend/tests/mocks/` — Manual mock implementations of repository interfaces
 
 ### Current Modules (Phase 4)
 
-Programs, Users & Auth (JWT + RBAC), Beneficiaries (with program enrollment). See `MASTERPLAN.md` Phase 4 for next modules.
+Programs, Users & Auth (JWT + RBAC), Beneficiaries (with program enrollment), Tenants (landlord-scoped CRUD with Address value object, deactivation). Frontend is scaffolded but not built out (Phase 5). Next: Properties, Debts, Transactions. See `MASTERPLAN.md`.
 
 ## Conventions
 
@@ -88,6 +120,7 @@ Programs, Users & Auth (JWT + RBAC), Beneficiaries (with program enrollment). Se
 - **Error responses**: `{ "error": { "code": "...", "message": "...", "details": [] } }` via `pkg/apperror/`
 - **Go imports**: group as stdlib, third-party, internal (blank line separated)
 - **DTOs**: Always use `delivery/http/dto/` types for HTTP — never expose domain entities directly
+- **Migrations**: Sequential numbering (`000001_`, `000002_`, ...), never modify existing files — create new ones. Every `.up.sql` needs a reversible `.down.sql`.
 
 ## Infrastructure Defaults
 
@@ -116,8 +149,8 @@ Config loaded via Viper from `.env` file + env vars. See `backend/internal/infra
 4. `infrastructure/persistence/pg/<name>_repo_pg.go` — PG implementation
 5. `delivery/http/dto/<name>_dto.go` — request/response types
 6. `delivery/http/handler/<name>_handler.go` — HTTP handler
-7. Register routes in `delivery/http/router/router.go`
-8. Wire in `cmd/server/main.go`
+7. Register routes in `delivery/http/router/router.go` (add field to `Handlers` struct + route group)
+8. Wire in `cmd/server/main.go` (repo -> use cases -> handler -> Handlers struct)
 9. Add Swagger annotations to handler
 10. Write tests in `tests/unit/` + `tests/mocks/`
 
@@ -137,12 +170,13 @@ Always use parameterized queries (`$1`, `$2`). Never modify existing migration f
 
 ## MCP Servers
 
-Configured in `.mcp.json` at project root (added via `claude mcp add --scope project`):
+Configured in `.mcp.json` at project root:
 - **postgres** — Query schemas and verify data before writing repository code
 - **mongodb** — Read-only inspection of audit logs and document schemas
 - **redis** — Inspect cache state and token blocklist
 - **context7** — Look up current library API docs instead of guessing
 - **playwright** — Browser automation and E2E testing
+- **chrome-devtools** — Chrome DevTools Protocol for frontend debugging
 
 Database servers require Docker running (`docker compose up -d`).
 
@@ -152,5 +186,5 @@ Database servers require Docker running (`docker compose up -d`).
 - `documentation/prompts/business-logic-reference.md` — Original system's business rules (source of truth for behavioral parity)
 - `documentation/architecture/clean-architecture.md` — Layer rules and DI pattern
 - `.github/copilot-instructions.md` — Original Copilot coding standards (preserved for reference)
-- `.github/agents/` — Copilot agent workflows (api-builder, db-migrator, frontend-builder, feature-orchestrator) — useful as step-by-step references
+- `.github/agents/` — Copilot agent workflows (api-builder, db-migrator, frontend-builder, feature-orchestrator)
 - `.github/skills/` — 15 skill reference docs covering testing patterns, auth, error handling, Docker, Swagger, caching, etc.
