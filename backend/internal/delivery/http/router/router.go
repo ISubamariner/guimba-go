@@ -20,6 +20,7 @@ type Handlers struct {
 	Auth        *handler.AuthHandler
 	User        *handler.UserHandler
 	Beneficiary *handler.BeneficiaryHandler
+	Tenant      *handler.TenantHandler
 }
 
 // NewRouter creates and configures the Chi router with all middleware and routes.
@@ -106,6 +107,18 @@ func NewRouter(h Handlers, frontendURL string, jwtManager *auth.JWTManager, bloc
 				r.Post("/{id}/programs", h.Beneficiary.EnrollInProgram)
 				r.Delete("/{id}/programs/{programId}", h.Beneficiary.RemoveFromProgram)
 			})
+		})
+
+		// Tenants (authenticated, landlord/admin)
+		r.Route("/tenants", func(r chi.Router) {
+			r.Use(requireAuth)
+			r.Use(middleware.RequireRole("admin", "landlord"))
+			r.Get("/", h.Tenant.List)
+			r.Get("/{id}", h.Tenant.Get)
+			r.Post("/", h.Tenant.Create)
+			r.Put("/{id}", h.Tenant.Update)
+			r.Put("/{id}/deactivate", h.Tenant.Deactivate)
+			r.Delete("/{id}", h.Tenant.Delete)
 		})
 	})
 
