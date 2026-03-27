@@ -39,7 +39,7 @@ type Money struct {
 }
 ```
 
-**Constructor:** `NewMoney(amount decimal.Decimal, currency Currency) (Money, error)` — validates non-negative, rounds to 2dp, validates currency.
+**Constructor:** `NewMoney(amount decimal.Decimal, currency Currency) (Money, error)` — validates amount >= 0 (zero allowed), rounds to 2dp, validates currency.
 
 **Methods:**
 - `Add(other Money) (Money, error)` — same currency required
@@ -47,7 +47,12 @@ type Money struct {
 - `Multiply(factor decimal.Decimal) Money`
 - `IsZero() bool`
 - `IsGreaterThan(other Money) (bool, error)` — same currency required
-- `Zero(currency Currency) Money` — creates Money(0, currency)
+
+**Package-level helper:** `ZeroMoney(currency Currency) Money` — creates Money(0, currency). Used for initializing AmountPaid on new debts.
+
+**MoneyDTO helpers** (in `delivery/http/dto/`):
+- `func ToMoney(dto MoneyDTO) (entity.Money, error)` — parses amount string to decimal, creates Money
+- `func NewMoneyDTO(m entity.Money) MoneyDTO` — converts Money to DTO
 
 **Validation rules:**
 - All arithmetic validates same currency → `ErrCurrencyMismatch`
@@ -55,9 +60,12 @@ type Money struct {
 - Invalid currency → `ErrInvalidCurrency`
 - Subtraction resulting in negative → `ErrInsufficientAmount`
 
-**Dependency:** `github.com/shopspring/decimal` added to go.mod.
+**Domain errors** (added to `backend/internal/domain/entity/errors.go`):
+- `ErrCurrencyMismatch`, `ErrNegativeAmount`, `ErrInvalidCurrency`, `ErrInsufficientAmount`
 
-**`ValidCurrencies` set** for validation: `map[Currency]bool` with all 7 currencies.
+**Dependency:** Add `github.com/shopspring/decimal` via `go get github.com/shopspring/decimal`.
+
+**`ValidCurrencies`** for validation: `map[Currency]bool` with all 7 currencies.
 
 ## 2. Enums (`domain/entity/debt_enums.go`)
 
@@ -160,7 +168,9 @@ type Debt struct {
 - DebtType must be valid
 - DueDate must be non-zero
 
-**Domain errors:**
+**Validation (`Validate()`) note:** DueDate must be non-zero; past dates are allowed (for recording historical debts).
+
+**Domain errors** (added to `backend/internal/domain/entity/errors.go`):
 - `ErrDebtDescriptionRequired`
 - `ErrDebtDescriptionTooLong`
 - `ErrDebtAmountRequired` (amount <= 0)
@@ -202,11 +212,13 @@ type Transaction struct {
 
 **Constructor:** `NewTransaction(debtID, tenantID, landlordID uuid.UUID, recordedBy *uuid.UUID, txType TransactionType, amount Money, method PaymentMethod, txDate time.Time, description string, receipt, reference *string) (*Transaction, error)`
 
+`RecordedByUserID` is optional (null for system-generated transactions).
+
 **Methods:**
 - `Verify(userID uuid.UUID) error` — validates not already verified → `ErrTransactionAlreadyVerified`
 - `Validate()` — Amount > 0, valid type, valid method, date non-zero
 
-**Domain errors:**
+**Domain errors** (added to `backend/internal/domain/entity/errors.go`):
 - `ErrTransactionAmountRequired`
 - `ErrTransactionInvalidType`
 - `ErrTransactionInvalidPaymentMethod`
@@ -274,11 +286,12 @@ No `Delete` — transactions are immutable and permanent.
 | Use Case | Dependencies | Key Logic |
 |:---|:---|:---|
 | `CreateDebt` | DebtRepo, UserRepo, TenantRepo, PropertyRepo | Validates tenant exists + belongs to landlord, property belongs to landlord (if provided), amount > 0, creates with PENDING |
-| `GetDebt` | DebtRepo | Gets by ID, **lazy overdue**: if `IsOverdue()` and status != OVERDUE → mark + persist |
-| `ListDebts` | DebtRepo | Filters + pagination, lazy overdue on all results |
+| `GetDebt` | DebtRepo | Gets by ID, **lazy overdue**: if `IsOverdue()` and status != OVERDUE → mark + persist. Use `SELECT ... FOR UPDATE` to prevent race conditions |
+| `ListDebts` | DebtRepo | Filters + pagination, lazy overdue on all results (mark + persist individually) |
 | `UpdateDebt` | DebtRepo | Existence check, preserves immutable fields (TenantID, LandlordID, AmountPaid, Status), re-validates |
 | `CancelDebt` | DebtRepo | Calls `debt.Cancel(reason)`, persists |
-| `MarkDebtPaid` | DebtRepo | Calculates remaining balance, calls `RecordPayment(balance)`, forces PAID |
+| `MarkDebtPaid` | DebtRepo | Calculates remaining balance, calls `RecordPayment(balance)` which auto-transitions to PAID |
+| `DeleteDebt` | DebtRepo | Existence check, soft delete via DeletedAt (consistent with other entities) |
 
 ### Transaction Use Cases (`usecase/transaction/`)
 
@@ -292,7 +305,7 @@ No `Delete` — transactions are immutable and permanent.
 
 ### Property Deactivation Modification
 
-Modify `DeactivatePropertyUseCase`: inject `DebtRepository`, call `HasActiveDebtsForProperty()` before deactivating. New error: `ErrPropertyHasActiveDebts`.
+Modify `DeactivatePropertyUseCase`: inject `DebtRepository`, call `HasActiveDebtsForProperty()` before deactivating. New error (add to `errors.go`): `ErrPropertyHasActiveDebts = errors.New("cannot deactivate property with active debts")`. Update constructor call in `main.go` to pass `debtRepo`.
 
 ## 7. Database Migrations
 
@@ -351,6 +364,7 @@ Modify `DeactivatePropertyUseCase`: inject `DebtRepository`, call `HasActiveDebt
 | PUT | `/{id}` | Update |
 | PUT | `/{id}/pay` | MarkPaid |
 | PUT | `/{id}/cancel` | Cancel |
+| DELETE | `/{id}` | Delete |
 
 ### TransactionHandler — `/api/v1/transactions`, auth + landlord/admin
 
@@ -378,7 +392,7 @@ Modify `DeactivatePropertyUseCase`: inject `DebtRepository`, call `HasActiveDebt
 
 ## Files to Create/Modify
 
-### New Files (24)
+### New Files (37)
 1. `backend/internal/domain/entity/money.go`
 2. `backend/internal/domain/entity/debt_enums.go`
 3. `backend/internal/domain/entity/debt.go`
@@ -391,36 +405,37 @@ Modify `DeactivatePropertyUseCase`: inject `DebtRepository`, call `HasActiveDebt
 10. `backend/internal/usecase/debt/update_debt.go`
 11. `backend/internal/usecase/debt/cancel_debt.go`
 12. `backend/internal/usecase/debt/mark_debt_paid.go`
-13. `backend/internal/usecase/transaction/record_payment.go`
-14. `backend/internal/usecase/transaction/record_refund.go`
-15. `backend/internal/usecase/transaction/get_transaction.go`
-16. `backend/internal/usecase/transaction/list_transactions.go`
-17. `backend/internal/usecase/transaction/verify_transaction.go`
-18. `backend/internal/delivery/http/dto/debt_dto.go`
-19. `backend/internal/delivery/http/dto/transaction_dto.go`
-20. `backend/internal/delivery/http/handler/debt_handler.go`
-21. `backend/internal/delivery/http/handler/transaction_handler.go`
-22. `backend/internal/infrastructure/persistence/pg/debt_repo_pg.go`
-23. `backend/internal/infrastructure/persistence/pg/transaction_repo_pg.go`
-24. `backend/migrations/000009_create_debts.up.sql`
-25. `backend/migrations/000009_create_debts.down.sql`
-26. `backend/migrations/000010_create_transactions.up.sql`
-27. `backend/migrations/000010_create_transactions.down.sql`
-28. `backend/tests/mocks/debt_repository_mock.go`
-29. `backend/tests/mocks/transaction_repository_mock.go`
-30. `backend/tests/unit/money_test.go`
-31. `backend/tests/unit/debt_entity_test.go`
-32. `backend/tests/unit/transaction_entity_test.go`
-33. `backend/tests/unit/debt_usecase_test.go`
-34. `backend/tests/unit/transaction_usecase_test.go`
-35. `backend/tests/unit/debt_handler_test.go`
-36. `backend/tests/unit/transaction_handler_test.go`
+13. `backend/internal/usecase/debt/delete_debt.go`
+14. `backend/internal/usecase/transaction/record_payment.go`
+15. `backend/internal/usecase/transaction/record_refund.go`
+16. `backend/internal/usecase/transaction/get_transaction.go`
+17. `backend/internal/usecase/transaction/list_transactions.go`
+18. `backend/internal/usecase/transaction/verify_transaction.go`
+19. `backend/internal/delivery/http/dto/debt_dto.go`
+20. `backend/internal/delivery/http/dto/transaction_dto.go`
+21. `backend/internal/delivery/http/handler/debt_handler.go`
+22. `backend/internal/delivery/http/handler/transaction_handler.go`
+23. `backend/internal/infrastructure/persistence/pg/debt_repo_pg.go`
+24. `backend/internal/infrastructure/persistence/pg/transaction_repo_pg.go`
+25. `backend/migrations/000009_create_debts.up.sql`
+26. `backend/migrations/000009_create_debts.down.sql`
+27. `backend/migrations/000010_create_transactions.up.sql`
+28. `backend/migrations/000010_create_transactions.down.sql`
+29. `backend/tests/mocks/debt_repository_mock.go`
+30. `backend/tests/mocks/transaction_repository_mock.go`
+31. `backend/tests/unit/money_test.go`
+32. `backend/tests/unit/debt_entity_test.go`
+33. `backend/tests/unit/transaction_entity_test.go`
+34. `backend/tests/unit/debt_usecase_test.go`
+35. `backend/tests/unit/transaction_usecase_test.go`
+36. `backend/tests/unit/debt_handler_test.go`
+37. `backend/tests/unit/transaction_handler_test.go`
 
 ### Modified Files (4)
 1. `backend/internal/domain/entity/errors.go` — add debt + transaction domain errors
 2. `backend/internal/usecase/property/deactivate_property.go` — add debt check
 3. `backend/internal/delivery/http/router/router.go` — add Debt + Transaction handlers + routes
-4. `backend/cmd/server/main.go` — wire debt + transaction modules
+4. `backend/cmd/server/main.go` — wire debt + transaction modules, update `DeactivatePropertyUseCase` to inject `DebtRepository`
 
 ## Deferred
 - Audit logging (will be added in Audit module)
