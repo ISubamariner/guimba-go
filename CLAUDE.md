@@ -99,6 +99,13 @@ All under `/api/v1`. Also: `GET /health` (no auth), `GET /swagger/*` (Swagger UI
 | `/tenants/{id}/deactivate` | PUT | Required | admin, landlord |
 | `/properties` | GET, GET/:id, POST, PUT/:id, DELETE/:id | Required | admin, landlord |
 | `/properties/{id}/deactivate` | PUT | Required | admin, landlord |
+| `/debts` | GET, GET/:id, POST, PUT/:id, DELETE/:id | Required | admin, landlord |
+| `/debts/{id}/pay` | PUT | Required | admin, landlord |
+| `/debts/{id}/cancel` | PUT | Required | admin, landlord |
+| `/transactions/payment` | POST | Required | admin, landlord |
+| `/transactions/refund` | POST | Required | admin, landlord |
+| `/transactions` | GET, GET/:id | Required | admin, landlord |
+| `/transactions/{id}/verify` | PUT | Required | admin, landlord |
 
 ### Key Directories
 
@@ -110,7 +117,7 @@ All under `/api/v1`. Also: `GET /health` (no auth), `GET /swagger/*` (Swagger UI
 
 ### Current Modules (Phase 4)
 
-Programs, Users & Auth (JWT + RBAC), Beneficiaries (with program enrollment), Tenants (landlord-scoped CRUD with Address value object, deactivation), Properties (owner-scoped CRUD with Address, deactivation). Frontend is scaffolded but not built out (Phase 5). Next: Debts, Transactions. See `MASTERPLAN.md`.
+Programs, Users & Auth (JWT + RBAC), Beneficiaries (with program enrollment), Tenants (landlord-scoped CRUD with Address value object, deactivation), Properties (landlord-scoped with deactivation), Debts & Transactions (Money value object, debt state machine, payment/refund orchestration, lazy overdue detection, transaction verification). Frontend is scaffolded but not built out (Phase 5). See `MASTERPLAN.md`.
 
 ## Conventions
 
