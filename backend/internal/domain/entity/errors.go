@@ -38,3 +38,11 @@ var (
 	ErrRoleDisplayNameRequired = errors.New("role display name is required")
 	ErrRoleSystemCannotDelete  = errors.New("system roles cannot be deleted")
 )
+
+// Domain errors for Tenant entity.
+var (
+	ErrTenantFullNameRequired = errors.New("tenant full name is required")
+	ErrTenantFullNameTooLong  = errors.New("tenant full name must be 255 characters or less")
+	ErrTenantContactRequired  = errors.New("tenant must have at least one contact method (email or phone)")
+	ErrTenantEmailExists      = errors.New("a tenant with this email already exists")
+)
