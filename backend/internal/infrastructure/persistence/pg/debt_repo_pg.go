@@ -132,15 +132,15 @@ func (r *DebtRepoPG) Update(ctx context.Context, d *entity.Debt) error {
 			original_amount = $3, original_currency = $4,
 			amount_paid = $5, amount_paid_currency = $6,
 			due_date = $7, status = $8, notes = $9,
-			property_id = $10
-		WHERE id = $11 AND deleted_at IS NULL`
+			property_id = $10, updated_at = $11
+		WHERE id = $12 AND deleted_at IS NULL`
 
 	_, err := r.pool.Exec(ctx, query,
 		string(d.DebtType), d.Description,
 		d.OriginalAmount.Amount, string(d.OriginalAmount.Currency),
 		d.AmountPaid.Amount, string(d.AmountPaid.Currency),
 		d.DueDate, string(d.Status), d.Notes,
-		d.PropertyID, d.ID,
+		d.PropertyID, time.Now().UTC(), d.ID,
 	)
 	return err
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -124,11 +125,11 @@ func (r *TransactionRepoPG) List(ctx context.Context, filter repository.Transact
 func (r *TransactionRepoPG) Update(ctx context.Context, tx *entity.Transaction) error {
 	query := `
 		UPDATE transactions
-		SET is_verified = $1, verified_by_user_id = $2, verified_at = $3
-		WHERE id = $4`
+		SET is_verified = $1, verified_by_user_id = $2, verified_at = $3, updated_at = $4
+		WHERE id = $5`
 
 	_, err := r.pool.Exec(ctx, query,
-		tx.IsVerified, tx.VerifiedByUserID, tx.VerifiedAt, tx.ID,
+		tx.IsVerified, tx.VerifiedByUserID, tx.VerifiedAt, time.Now().UTC(), tx.ID,
 	)
 	return err
 }
