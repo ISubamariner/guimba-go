@@ -15,8 +15,8 @@ const (
 	CurrencyUGX Currency = "UGX"
 )
 
-// ValidCurrencies lists all supported currencies.
-var ValidCurrencies = map[Currency]bool{
+// validCurrencies lists all supported currencies.
+var validCurrencies = map[Currency]bool{
 	CurrencyPHP: true,
 	CurrencyUSD: true,
 	CurrencyEUR: true,
@@ -37,7 +37,7 @@ func NewMoney(amount decimal.Decimal, currency Currency) (Money, error) {
 	if amount.IsNegative() {
 		return Money{}, ErrNegativeAmount
 	}
-	if !ValidCurrencies[currency] {
+	if !validCurrencies[currency] {
 		return Money{}, ErrInvalidCurrency
 	}
 	return Money{

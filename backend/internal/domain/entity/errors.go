@@ -66,32 +66,25 @@ var (
 
 // Domain errors for Debt entity.
 var (
-	ErrDebtDescriptionRequired      = errors.New("debt description is required")
-	ErrDebtDescriptionTooLong       = errors.New("debt description must be 500 characters or less")
-	ErrDebtAmountRequired           = errors.New("debt amount must be greater than zero")
-	ErrDebtInvalidType              = errors.New("invalid debt type")
-	ErrDebtDueDateRequired          = errors.New("debt due date is required")
-	ErrDebtAlreadyPaid              = errors.New("debt is already fully paid")
-	ErrDebtAlreadyCancelled         = errors.New("debt is already cancelled")
-	ErrDebtOverpayment              = errors.New("payment amount exceeds remaining balance")
-	ErrDebtInvalidStateTransition   = errors.New("invalid debt state transition")
-	ErrDebtNotPayable               = errors.New("debt is not in a payable state")
-	ErrPropertyHasActiveDebts       = errors.New("cannot deactivate property with active debts")
-)
-
-// Domain errors for enum validation.
-var (
-	ErrInvalidDebtStatus        = errors.New("invalid debt status")
-	ErrInvalidDebtType          = errors.New("invalid debt type value")
-	ErrInvalidTransactionType   = errors.New("invalid transaction type")
-	ErrInvalidPaymentMethod     = errors.New("invalid payment method")
+	ErrDebtDescriptionRequired    = errors.New("debt description is required")
+	ErrDebtDescriptionTooLong     = errors.New("debt description must be 500 characters or less")
+	ErrDebtAmountRequired         = errors.New("debt amount must be greater than zero")
+	ErrDebtInvalidStatus          = errors.New("invalid debt status")
+	ErrDebtInvalidType            = errors.New("invalid debt type")
+	ErrDebtDueDateRequired        = errors.New("debt due date is required")
+	ErrDebtAlreadyPaid            = errors.New("debt is already fully paid")
+	ErrDebtAlreadyCancelled       = errors.New("debt is already cancelled")
+	ErrDebtOverpayment            = errors.New("payment amount exceeds remaining balance")
+	ErrDebtInvalidStateTransition = errors.New("invalid debt state transition")
+	ErrDebtNotPayable             = errors.New("debt is not in a payable state")
+	ErrPropertyHasActiveDebts     = errors.New("cannot deactivate property with active debts")
 )
 
 // Domain errors for Transaction entity.
 var (
 	ErrTransactionAmountRequired       = errors.New("transaction amount must be greater than zero")
 	ErrTransactionInvalidType          = errors.New("invalid transaction type")
-	ErrTransactionInvalidPaymentMethod = errors.New("invalid payment method")
+	ErrTransactionInvalidPaymentMethod = errors.New("invalid payment method for transaction")
 	ErrTransactionDateRequired         = errors.New("transaction date is required")
 	ErrTransactionAlreadyVerified      = errors.New("transaction is already verified")
 	ErrTransactionDuplicateReference   = errors.New("duplicate reference number for this debt")
