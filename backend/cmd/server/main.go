@@ -18,6 +18,7 @@ import (
 	authuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/auth"
 	beneficiaryuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/beneficiary"
 	programuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/program"
+	propertyuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/property"
 	tenantuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/tenant"
 	useruc "github.com/ISubamariner/guimba-go/backend/internal/usecase/user"
 	"github.com/ISubamariner/guimba-go/backend/pkg/auth"
@@ -128,6 +129,16 @@ func main() {
 	deleteTenantUC := tenantuc.NewDeleteTenantUseCase(tenantRepo)
 	tenantHandler := handler.NewTenantHandler(createTenantUC, getTenantUC, listTenantsUC, updateTenantUC, deactivateTenantUC, deleteTenantUC)
 
+	// Wire Property module
+	propertyRepo := pg.NewPropertyRepoPG(pgPool)
+	createPropertyUC := propertyuc.NewCreatePropertyUseCase(propertyRepo, userRepo)
+	getPropertyUC := propertyuc.NewGetPropertyUseCase(propertyRepo)
+	listPropertiesUC := propertyuc.NewListPropertiesUseCase(propertyRepo)
+	updatePropertyUC := propertyuc.NewUpdatePropertyUseCase(propertyRepo)
+	deactivatePropertyUC := propertyuc.NewDeactivatePropertyUseCase(propertyRepo)
+	deletePropertyUC := propertyuc.NewDeletePropertyUseCase(propertyRepo)
+	propertyHandler := handler.NewPropertyHandler(createPropertyUC, getPropertyUC, listPropertiesUC, updatePropertyUC, deactivatePropertyUC, deletePropertyUC)
+
 	// Set up router
 	r := router.NewRouter(router.Handlers{
 		Health:      healthHandler,
@@ -136,6 +147,7 @@ func main() {
 		User:        userHandler,
 		Beneficiary: beneficiaryHandler,
 		Tenant:      tenantHandler,
+		Property:    propertyHandler,
 	}, cfg.App.FrontendURL, jwtManager, tokenBlocklist)
 
 	srv := &http.Server{
