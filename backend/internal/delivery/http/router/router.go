@@ -22,6 +22,8 @@ type Handlers struct {
 	Beneficiary *handler.BeneficiaryHandler
 	Tenant      *handler.TenantHandler
 	Property    *handler.PropertyHandler
+	Debt        *handler.DebtHandler
+	Transaction *handler.TransactionHandler
 }
 
 // NewRouter creates and configures the Chi router with all middleware and routes.
@@ -132,6 +134,30 @@ func NewRouter(h Handlers, frontendURL string, jwtManager *auth.JWTManager, bloc
 			r.Put("/{id}", h.Property.Update)
 			r.Put("/{id}/deactivate", h.Property.Deactivate)
 			r.Delete("/{id}", h.Property.Delete)
+		})
+
+		// Debts (authenticated, landlord/admin)
+		r.Route("/debts", func(r chi.Router) {
+			r.Use(requireAuth)
+			r.Use(middleware.RequireRole("admin", "landlord"))
+			r.Get("/", h.Debt.List)
+			r.Get("/{id}", h.Debt.Get)
+			r.Post("/", h.Debt.Create)
+			r.Put("/{id}", h.Debt.Update)
+			r.Put("/{id}/pay", h.Debt.MarkPaid)
+			r.Put("/{id}/cancel", h.Debt.Cancel)
+			r.Delete("/{id}", h.Debt.Delete)
+		})
+
+		// Transactions (authenticated, landlord/admin)
+		r.Route("/transactions", func(r chi.Router) {
+			r.Use(requireAuth)
+			r.Use(middleware.RequireRole("admin", "landlord"))
+			r.Post("/payment", h.Transaction.RecordPayment)
+			r.Post("/refund", h.Transaction.RecordRefund)
+			r.Get("/{id}", h.Transaction.Get)
+			r.Get("/", h.Transaction.List)
+			r.Put("/{id}/verify", h.Transaction.Verify)
 		})
 	})
 

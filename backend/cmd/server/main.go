@@ -11,16 +11,17 @@ import (
 
 	"github.com/ISubamariner/guimba-go/backend/internal/delivery/http/handler"
 	"github.com/ISubamariner/guimba-go/backend/internal/delivery/http/router"
-	"github.com/ISubamariner/guimba-go/backend/internal/domain/repository"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/cache"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/config"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/database"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/persistence/pg"
 	authuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/auth"
 	beneficiaryuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/beneficiary"
+	debtuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/debt"
 	programuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/program"
 	propertyuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/property"
 	tenantuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/tenant"
+	transactionuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/transaction"
 	useruc "github.com/ISubamariner/guimba-go/backend/internal/usecase/user"
 	"github.com/ISubamariner/guimba-go/backend/pkg/auth"
 	"github.com/ISubamariner/guimba-go/backend/pkg/logger"
@@ -130,17 +131,37 @@ func main() {
 	deleteTenantUC := tenantuc.NewDeleteTenantUseCase(tenantRepo)
 	tenantHandler := handler.NewTenantHandler(createTenantUC, getTenantUC, listTenantsUC, updateTenantUC, deactivateTenantUC, deleteTenantUC)
 
+	// Wire Debt repo (needed by Property deactivation)
+	debtRepo := pg.NewDebtRepoPG(pgPool)
+
 	// Wire Property module
 	propertyRepo := pg.NewPropertyRepoPG(pgPool)
 	createPropertyUC := propertyuc.NewCreatePropertyUseCase(propertyRepo, userRepo)
 	getPropertyUC := propertyuc.NewGetPropertyUseCase(propertyRepo)
 	listPropertiesUC := propertyuc.NewListPropertiesUseCase(propertyRepo)
 	updatePropertyUC := propertyuc.NewUpdatePropertyUseCase(propertyRepo)
-	// TODO: Wire DebtRepoPG once debt persistence is implemented (Task 6+)
-	var debtRepo repository.DebtRepository
 	deactivatePropertyUC := propertyuc.NewDeactivatePropertyUseCase(propertyRepo, debtRepo)
 	deletePropertyUC := propertyuc.NewDeletePropertyUseCase(propertyRepo)
 	propertyHandler := handler.NewPropertyHandler(createPropertyUC, getPropertyUC, listPropertiesUC, updatePropertyUC, deactivatePropertyUC, deletePropertyUC)
+
+	// Wire Debt module
+	createDebtUC := debtuc.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propertyRepo)
+	getDebtUC := debtuc.NewGetDebtUseCase(debtRepo)
+	listDebtsUC := debtuc.NewListDebtsUseCase(debtRepo)
+	updateDebtUC := debtuc.NewUpdateDebtUseCase(debtRepo)
+	cancelDebtUC := debtuc.NewCancelDebtUseCase(debtRepo)
+	markDebtPaidUC := debtuc.NewMarkDebtPaidUseCase(debtRepo)
+	deleteDebtUC := debtuc.NewDeleteDebtUseCase(debtRepo)
+	debtHandler := handler.NewDebtHandler(createDebtUC, getDebtUC, listDebtsUC, updateDebtUC, cancelDebtUC, markDebtPaidUC, deleteDebtUC)
+
+	// Wire Transaction module
+	transactionRepo := pg.NewTransactionRepoPG(pgPool)
+	recordPaymentUC := transactionuc.NewRecordPaymentUseCase(transactionRepo, debtRepo, userRepo, tenantRepo)
+	recordRefundUC := transactionuc.NewRecordRefundUseCase(transactionRepo, debtRepo, userRepo, tenantRepo)
+	getTransactionUC := transactionuc.NewGetTransactionUseCase(transactionRepo)
+	listTransactionsUC := transactionuc.NewListTransactionsUseCase(transactionRepo)
+	verifyTransactionUC := transactionuc.NewVerifyTransactionUseCase(transactionRepo)
+	transactionHandler := handler.NewTransactionHandler(recordPaymentUC, recordRefundUC, getTransactionUC, listTransactionsUC, verifyTransactionUC)
 
 	// Set up router
 	r := router.NewRouter(router.Handlers{
@@ -151,6 +172,8 @@ func main() {
 		Beneficiary: beneficiaryHandler,
 		Tenant:      tenantHandler,
 		Property:    propertyHandler,
+		Debt:        debtHandler,
+		Transaction: transactionHandler,
 	}, cfg.App.FrontendURL, jwtManager, tokenBlocklist)
 
 	srv := &http.Server{
