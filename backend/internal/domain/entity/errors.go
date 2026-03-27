@@ -46,3 +46,12 @@ var (
 	ErrTenantContactRequired  = errors.New("tenant must have at least one contact method (email or phone)")
 	ErrTenantEmailExists      = errors.New("a tenant with this email already exists")
 )
+
+// Domain errors for Property entity.
+var (
+	ErrPropertyNameRequired = errors.New("property name is required")
+	ErrPropertyNameTooLong  = errors.New("property name must be 255 characters or less")
+	ErrPropertyCodeRequired = errors.New("property code is required")
+	ErrPropertySizeRequired = errors.New("property size in square meters must be greater than zero")
+	ErrPropertyCodeExists   = errors.New("a property with this code already exists")
+)
