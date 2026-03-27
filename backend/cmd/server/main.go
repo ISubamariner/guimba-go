@@ -11,6 +11,7 @@ import (
 
 	"github.com/ISubamariner/guimba-go/backend/internal/delivery/http/handler"
 	"github.com/ISubamariner/guimba-go/backend/internal/delivery/http/router"
+	"github.com/ISubamariner/guimba-go/backend/internal/domain/repository"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/cache"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/config"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/database"
@@ -135,7 +136,9 @@ func main() {
 	getPropertyUC := propertyuc.NewGetPropertyUseCase(propertyRepo)
 	listPropertiesUC := propertyuc.NewListPropertiesUseCase(propertyRepo)
 	updatePropertyUC := propertyuc.NewUpdatePropertyUseCase(propertyRepo)
-	deactivatePropertyUC := propertyuc.NewDeactivatePropertyUseCase(propertyRepo)
+	// TODO: Wire DebtRepoPG once debt persistence is implemented (Task 6+)
+	var debtRepo repository.DebtRepository
+	deactivatePropertyUC := propertyuc.NewDeactivatePropertyUseCase(propertyRepo, debtRepo)
 	deletePropertyUC := propertyuc.NewDeletePropertyUseCase(propertyRepo)
 	propertyHandler := handler.NewPropertyHandler(createPropertyUC, getPropertyUC, listPropertiesUC, updatePropertyUC, deactivatePropertyUC, deletePropertyUC)
 

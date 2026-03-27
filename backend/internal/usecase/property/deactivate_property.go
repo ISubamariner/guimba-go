@@ -5,16 +5,18 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/ISubamariner/guimba-go/backend/internal/domain/entity"
 	"github.com/ISubamariner/guimba-go/backend/internal/domain/repository"
 	"github.com/ISubamariner/guimba-go/backend/pkg/apperror"
 )
 
 type DeactivatePropertyUseCase struct {
-	repo repository.PropertyRepository
+	repo     repository.PropertyRepository
+	debtRepo repository.DebtRepository
 }
 
-func NewDeactivatePropertyUseCase(repo repository.PropertyRepository) *DeactivatePropertyUseCase {
-	return &DeactivatePropertyUseCase{repo: repo}
+func NewDeactivatePropertyUseCase(repo repository.PropertyRepository, debtRepo repository.DebtRepository) *DeactivatePropertyUseCase {
+	return &DeactivatePropertyUseCase{repo: repo, debtRepo: debtRepo}
 }
 
 func (uc *DeactivatePropertyUseCase) Execute(ctx context.Context, id uuid.UUID) error {
@@ -24,6 +26,14 @@ func (uc *DeactivatePropertyUseCase) Execute(ctx context.Context, id uuid.UUID) 
 	}
 	if existing == nil {
 		return apperror.NewNotFound("Property", id)
+	}
+
+	hasDebts, err := uc.debtRepo.HasActiveDebtsForProperty(ctx, id)
+	if err != nil {
+		return err
+	}
+	if hasDebts {
+		return apperror.NewConflict(entity.ErrPropertyHasActiveDebts.Error())
 	}
 
 	existing.IsActive = false

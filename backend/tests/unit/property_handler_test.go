@@ -24,7 +24,7 @@ func newPropertyHandler(repo *mocks.PropertyRepositoryMock, userRepo *mocks.User
 	getUC := propertyuc.NewGetPropertyUseCase(repo)
 	listUC := propertyuc.NewListPropertiesUseCase(repo)
 	updateUC := propertyuc.NewUpdatePropertyUseCase(repo)
-	deactivateUC := propertyuc.NewDeactivatePropertyUseCase(repo)
+	deactivateUC := propertyuc.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{})
 	deleteUC := propertyuc.NewDeletePropertyUseCase(repo)
 	return handler.NewPropertyHandler(createUC, getUC, listUC, updateUC, deactivateUC, deleteUC)
 }

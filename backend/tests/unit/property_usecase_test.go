@@ -204,7 +204,7 @@ func TestDeactivateProperty_Success(t *testing.T) {
 			return nil
 		},
 	}
-	uc := property.NewDeactivatePropertyUseCase(repo)
+	uc := property.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{})
 	err := uc.Execute(context.Background(), propID)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -217,7 +217,7 @@ func TestDeactivateProperty_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	uc := property.NewDeactivatePropertyUseCase(repo)
+	uc := property.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New())
 	if err == nil {
 		t.Fatal("expected not found error")
