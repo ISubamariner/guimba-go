@@ -166,10 +166,18 @@ func (h *DebtHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	if s := r.URL.Query().Get("status"); s != "" {
 		status := entity.DebtStatus(s)
+		if !status.IsValid() {
+			apperror.WriteError(w, apperror.NewBadRequest("Invalid status filter"))
+			return
+		}
 		filter.Status = &status
 	}
 	if s := r.URL.Query().Get("debt_type"); s != "" {
 		dt := entity.DebtType(s)
+		if !dt.IsValid() {
+			apperror.WriteError(w, apperror.NewBadRequest("Invalid debt_type filter"))
+			return
+		}
 		filter.DebtType = &dt
 	}
 	if s := r.URL.Query().Get("search"); s != "" {
