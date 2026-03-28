@@ -39,13 +39,9 @@ func newTestAuditEntry(userID uuid.UUID, action string) *repository.AuditEntry {
 }
 
 func TestAuditRepo_Log_And_List(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs collection
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	userID := uuid.New()
 	entry := newTestAuditEntry(userID, "create")
@@ -85,13 +81,9 @@ func TestAuditRepo_Log_And_List(t *testing.T) {
 }
 
 func TestAuditRepo_List_FilterByUserID(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	user1 := uuid.New()
 	user2 := uuid.New()
@@ -133,13 +125,9 @@ func TestAuditRepo_List_FilterByUserID(t *testing.T) {
 }
 
 func TestAuditRepo_List_FilterByAction(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	userID := uuid.New()
 
@@ -175,13 +163,9 @@ func TestAuditRepo_List_FilterByAction(t *testing.T) {
 }
 
 func TestAuditRepo_List_FilterByResourceType(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	userID := uuid.New()
 
@@ -228,13 +212,9 @@ func TestAuditRepo_List_FilterByResourceType(t *testing.T) {
 }
 
 func TestAuditRepo_List_FilterBySuccess(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	userID := uuid.New()
 
@@ -282,13 +262,9 @@ func TestAuditRepo_List_FilterBySuccess(t *testing.T) {
 }
 
 func TestAuditRepo_List_FilterByDateRange(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	userID := uuid.New()
 	now := time.Now().UTC()
@@ -331,13 +307,9 @@ func TestAuditRepo_List_FilterByDateRange(t *testing.T) {
 }
 
 func TestAuditRepo_List_WithPagination(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	userID := uuid.New()
 
@@ -386,13 +358,9 @@ func TestAuditRepo_List_WithPagination(t *testing.T) {
 }
 
 func TestAuditRepo_List_FilterByLandlordID(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	landlordID := uuid.New()
 	otherUserID := uuid.New()
@@ -434,13 +402,9 @@ func TestAuditRepo_List_FilterByLandlordID(t *testing.T) {
 }
 
 func TestAuditRepo_List_SortedByTimestamp(t *testing.T) {
+	truncateAll(t)
 	ctx := context.Background()
 	repo := mongo.NewAuditRepoMongo(testMongoDB.Client(), testMongoDB.Name())
-
-	// Clear audit logs
-	if err := testMongoDB.Collection("audit_logs").Drop(ctx); err != nil {
-		t.Logf("warning: could not drop audit_logs: %v", err)
-	}
 
 	userID := uuid.New()
 	baseTime := time.Now().UTC()
