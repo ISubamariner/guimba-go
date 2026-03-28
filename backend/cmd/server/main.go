@@ -22,6 +22,7 @@ import (
 	beneficiaryuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/beneficiary"
 	dashuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/dashboard"
 	debtuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/debt"
+	exportuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/export"
 	programuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/program"
 	propertyuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/property"
 	tenantuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/tenant"
@@ -184,6 +185,12 @@ func main() {
 	getRecentActivitiesUC := dashuc.NewGetRecentActivitiesUseCase(auditRepo)
 	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getRecentActivitiesUC)
 
+	// Wire Export module
+	exportTenantsUC := exportuc.NewExportTenantsUseCase(tenantRepo)
+	exportPropertiesUC := exportuc.NewExportPropertiesUseCase(propertyRepo)
+	exportDebtsUC := exportuc.NewExportDebtsUseCase(debtRepo)
+	exportHandler := handler.NewExportHandler(exportTenantsUC, exportPropertiesUC, exportDebtsUC)
+
 	// Set up router
 	r := router.NewRouter(router.Handlers{
 		Health:      healthHandler,
@@ -197,6 +204,7 @@ func main() {
 		Transaction: transactionHandler,
 		Audit:       auditHandler,
 		Dashboard:   dashboardHandler,
+		Export:      exportHandler,
 	}, cfg.App.FrontendURL, jwtManager, tokenBlocklist)
 
 	srv := &http.Server{
