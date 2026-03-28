@@ -659,7 +659,7 @@ For **each** domain aggregate (e.g., Debts, Users, Borrowers):
 - [x] Register routes in `delivery/http/router/`
 - [x] Add Swagger annotations
 - [x] Write unit tests in `tests/unit/`
-- [ ] Write integration tests in `tests/integration/`
+- [x] Write integration tests in `tests/integration/` — testcontainers-go (Postgres + MongoDB + Redis), 44 tests covering all 9 repo implementations + auth API flow
 
 Port order:
 1. [x] **Programs** (core entity, simplest CRUD) — ✅ Complete: entity, repository interface, 5 use cases, PG repo, DTOs, handler with Swagger, routes, 35 unit tests
