@@ -32,19 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      setIsLoading(false);
-      return;
+    async function restoreSession() {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        const user = await api.get<UserResponse>("/auth/me");
+        setUser(user);
+      } catch {
+        clearTokens();
+      }
     }
 
-    api
-      .get<UserResponse>("/auth/me")
-      .then(setUser)
-      .catch(() => {
-        clearTokens();
-      })
-      .finally(() => setIsLoading(false));
+    restoreSession().finally(() => setIsLoading(false));
   }, []);
 
   const login = useCallback(async (data: LoginRequest) => {
