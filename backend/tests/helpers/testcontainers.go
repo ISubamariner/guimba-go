@@ -110,7 +110,7 @@ func SetupContainers() (*TestContainers, error) {
 // TruncateAll clears all tables for test isolation.
 func (tc *TestContainers) TruncateAll(ctx context.Context) error {
 	_, err := tc.PgPool.Exec(ctx, `TRUNCATE TABLE
-		beneficiary_programs,
+		program_beneficiaries,
 		transactions,
 		debts,
 		properties,
