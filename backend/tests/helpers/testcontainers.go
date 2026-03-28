@@ -109,21 +109,19 @@ func SetupContainers() (*TestContainers, error) {
 
 // TruncateAll clears all tables for test isolation.
 func (tc *TestContainers) TruncateAll(ctx context.Context) error {
-	tables := []string{
-		"beneficiary_programs",
-		"transactions",
-		"debts",
-		"properties",
-		"tenants",
-		"user_roles",
-		"beneficiaries",
-		"users",
-		"programs",
-	}
-	for _, table := range tables {
-		if _, err := tc.PgPool.Exec(ctx, "DELETE FROM "+table); err != nil {
-			return fmt.Errorf("truncating %s: %w", table, err)
-		}
+	_, err := tc.PgPool.Exec(ctx, `TRUNCATE TABLE
+		beneficiary_programs,
+		transactions,
+		debts,
+		properties,
+		tenants,
+		user_roles,
+		beneficiaries,
+		users,
+		programs
+		CASCADE`)
+	if err != nil {
+		return fmt.Errorf("truncating tables: %w", err)
 	}
 
 	// Clear MongoDB collections
@@ -140,10 +138,19 @@ func (tc *TestContainers) Cleanup() {
 	if tc.PgPool != nil {
 		tc.PgPool.Close()
 	}
+	if tc.MongoDB != nil {
+		if err := tc.MongoDB.Client().Disconnect(ctx); err != nil {
+			log.Printf("warning: failed to disconnect mongo client: %v", err)
+		}
+	}
 	if tc.pgContainer != nil {
-		_ = tc.pgContainer.Terminate(ctx)
+		if err := tc.pgContainer.Terminate(ctx); err != nil {
+			log.Printf("warning: failed to terminate postgres container: %v", err)
+		}
 	}
 	if tc.mongoContainer != nil {
-		_ = tc.mongoContainer.Terminate(ctx)
+		if err := tc.mongoContainer.Terminate(ctx); err != nil {
+			log.Printf("warning: failed to terminate mongo container: %v", err)
+		}
 	}
 }
