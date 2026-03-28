@@ -385,7 +385,9 @@ func TestAuthAPI_Refresh_BlocksOldToken(t *testing.T) {
 	var regResp struct {
 		RefreshToken string `json:"refresh_token"`
 	}
-	json.NewDecoder(resp.Body).Decode(&regResp)
+	if err := json.NewDecoder(resp.Body).Decode(&regResp); err != nil {
+		t.Fatalf("register: failed to decode response: %v", err)
+	}
 	resp.Body.Close()
 
 	oldRefreshToken := regResp.RefreshToken
