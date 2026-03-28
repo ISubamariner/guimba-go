@@ -17,6 +17,7 @@ import (
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/database"
 	mongorepo "github.com/ISubamariner/guimba-go/backend/internal/infrastructure/persistence/mongo"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/persistence/pg"
+	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/scheduler"
 	audituc "github.com/ISubamariner/guimba-go/backend/internal/usecase/audit"
 	authuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/auth"
 	beneficiaryuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/beneficiary"
@@ -190,6 +191,10 @@ func main() {
 	exportPropertiesUC := exportuc.NewExportPropertiesUseCase(propertyRepo)
 	exportDebtsUC := exportuc.NewExportDebtsUseCase(debtRepo)
 	exportHandler := handler.NewExportHandler(exportTenantsUC, exportPropertiesUC, exportDebtsUC)
+
+	// Start Overdue Scheduler
+	overdueScheduler := scheduler.NewOverdueScheduler(debtRepo, 24*time.Hour)
+	go overdueScheduler.Start(ctx)
 
 	// Set up router
 	r := router.NewRouter(router.Handlers{
