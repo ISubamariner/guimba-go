@@ -17,6 +17,7 @@ import (
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/database"
 	mongorepo "github.com/ISubamariner/guimba-go/backend/internal/infrastructure/persistence/mongo"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/persistence/pg"
+	audituc "github.com/ISubamariner/guimba-go/backend/internal/usecase/audit"
 	authuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/auth"
 	beneficiaryuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/beneficiary"
 	debtuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/debt"
@@ -85,6 +86,11 @@ func main() {
 	auditRepo := audit.NewBufferedAuditLogger(mongoAuditRepo, redisClient)
 	go auditRepo.Start(ctx)
 	defer auditRepo.Stop()
+
+	// Wire Audit query handler
+	listAuditLogsUC := audituc.NewListAuditLogsUseCase(auditRepo)
+	listLandlordAuditLogsUC := audituc.NewListLandlordAuditLogsUseCase(auditRepo)
+	auditHandler := handler.NewAuditHandler(listAuditLogsUC, listLandlordAuditLogsUC)
 
 	// Wire handlers
 	healthHandler := handler.NewHealthHandler(pgPool, mongoClient, redisClient)
@@ -182,6 +188,7 @@ func main() {
 		Property:    propertyHandler,
 		Debt:        debtHandler,
 		Transaction: transactionHandler,
+		Audit:       auditHandler,
 	}, cfg.App.FrontendURL, jwtManager, tokenBlocklist)
 
 	srv := &http.Server{
