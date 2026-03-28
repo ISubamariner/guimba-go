@@ -50,15 +50,9 @@ func setCSVHeaders(w http.ResponseWriter, resource string) {
 // @Failure      500  {object}  apperror.ErrorResponse
 // @Router       /api/v1/export/tenants [get]
 func (h *ExportHandler) ExportTenants(w http.ResponseWriter, r *http.Request) {
-	userIDStr, ok := r.Context().Value(middleware.AuthUserIDKey).(string)
+	landlordID, ok := r.Context().Value(middleware.AuthUserIDKey).(uuid.UUID)
 	if !ok {
-		apperror.WriteError(w, apperror.NewUnauthorized("User ID not found in context"))
-		return
-	}
-
-	landlordID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		apperror.WriteError(w, apperror.NewBadRequest("Invalid user ID"))
+		apperror.WriteError(w, apperror.NewUnauthorized("User not authenticated"))
 		return
 	}
 
@@ -81,15 +75,9 @@ func (h *ExportHandler) ExportTenants(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  apperror.ErrorResponse
 // @Router       /api/v1/export/properties [get]
 func (h *ExportHandler) ExportProperties(w http.ResponseWriter, r *http.Request) {
-	userIDStr, ok := r.Context().Value(middleware.AuthUserIDKey).(string)
+	ownerID, ok := r.Context().Value(middleware.AuthUserIDKey).(uuid.UUID)
 	if !ok {
-		apperror.WriteError(w, apperror.NewUnauthorized("User ID not found in context"))
-		return
-	}
-
-	ownerID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		apperror.WriteError(w, apperror.NewBadRequest("Invalid user ID"))
+		apperror.WriteError(w, apperror.NewUnauthorized("User not authenticated"))
 		return
 	}
 
@@ -112,15 +100,9 @@ func (h *ExportHandler) ExportProperties(w http.ResponseWriter, r *http.Request)
 // @Failure      500  {object}  apperror.ErrorResponse
 // @Router       /api/v1/export/debts [get]
 func (h *ExportHandler) ExportDebts(w http.ResponseWriter, r *http.Request) {
-	userIDStr, ok := r.Context().Value(middleware.AuthUserIDKey).(string)
+	landlordID, ok := r.Context().Value(middleware.AuthUserIDKey).(uuid.UUID)
 	if !ok {
-		apperror.WriteError(w, apperror.NewUnauthorized("User ID not found in context"))
-		return
-	}
-
-	landlordID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		apperror.WriteError(w, apperror.NewBadRequest("Invalid user ID"))
+		apperror.WriteError(w, apperror.NewUnauthorized("User not authenticated"))
 		return
 	}
 
