@@ -99,7 +99,7 @@ const (
 
 A `AuditContext` middleware added to the global middleware stack extracts `RemoteAddr`, `User-Agent`, `URL.Path`, and `Method` into context values.
 
-A helper function `audit.FromContext(ctx)` returns a struct with all four fields, using safe empty-string defaults when keys are missing (so unit tests work without HTTP context). This helper also pulls `UserID`, `UserEmail`, and `UserRole` from the existing auth middleware context keys (`middleware.AuthUserIDKey`, `middleware.AuthEmailKey`, `middleware.AuthRolesKey`).
+A helper function `audit.FromContext(ctx)` returns a struct with all four request fields plus auth fields, using safe empty-string defaults when keys are missing (so unit tests work without HTTP context). This helper also pulls `UserID` and `UserEmail` from the existing auth middleware context keys (`middleware.AuthUserIDKey`, `middleware.AuthEmailKey`). For `UserRole`, it reads `middleware.AuthRolesKey` (which is `[]string`) and joins the roles into a comma-separated string (e.g., `"admin,landlord"`).
 
 ---
 
@@ -124,11 +124,11 @@ Implements the `Log` and `List` methods directly against MongoDB.
 
 Wraps `MongoAuditRepo` with Redis-backed durability.
 
-- **Log():** Serializes `AuditEntry` to JSON, pushes to Redis list key `audit:queue` via `LPUSH`
+- **Log():** Serializes `AuditEntry` to JSON, pushes to Redis list key `audit:queue` via `LPUSH`. If Redis `LPUSH` fails, the error is logged via `slog.Error` and `Log()` returns nil — mutations are never blocked by audit failures.
 - **Background goroutine:** Pops entries via `BRPOP` (blocking pop, 1s timeout), writes to MongoDB
 - **Batch size:** Up to 10 entries per flush cycle
 - **On MongoDB failure:** Entry is re-pushed to Redis, retry with exponential backoff (1s → 2s → 4s → ... → max 30s)
-- **Graceful shutdown:** Accepts a `context.Context`; on cancellation, switches to non-blocking `RPOP` loop to drain remaining entries before returning
+- **Graceful shutdown:** Accepts a `context.Context`; on cancellation, switches to non-blocking `RPOP` loop to drain remaining entries before returning. The HTTP server must stop accepting requests BEFORE `auditLogger.Stop()` is called, ensuring no new audit entries arrive while draining.
 - **List():** Delegates directly to `MongoAuditRepo.List()` (reads bypass the buffer)
 
 ### 4.3 Wiring in main.go
@@ -163,7 +163,7 @@ uc.auditRepo.Log(ctx, &repository.AuditEntry{
 })
 ```
 
-The `BufferedAuditLogger` enriches the entry with `ID`, `Timestamp`, and context-derived fields (`UserID`, `UserEmail`, `UserRole`, `IPAddress`, `UserAgent`, `Endpoint`, `Method`) before pushing to Redis.
+The `BufferedAuditLogger` enriches the entry with `ID`, `Timestamp`, `StatusCode` (hardcoded to 200 — audit only fires on success), and context-derived fields (`UserID`, `UserEmail`, `UserRole`, `IPAddress`, `UserAgent`, `Endpoint`, `Method`) before pushing to Redis.
 
 ### 5.2 Affected Use Cases (~20)
 
@@ -185,6 +185,7 @@ Each action includes relevant domain context in the `Metadata` map. Examples:
 - **APPLY_PAYMENT:** `landlord_id`, `tenant_id`, `payment_amount`, `currency`, `balance_before`, `balance_after`, `debt_type`
 - **UPDATE_TENANT:** `landlord_id`, `changes` (map of field → before/after)
 - **ASSIGN_ROLE:** `role_name`, `target_user_email`
+- **VERIFY_TRANSACTION:** `transaction_id`, `verified_by_user_id`, `transaction_type`, `amount`, `currency`, `tenant_id`, `landlord_id`
 
 Simpler actions (Delete, Deactivate) include just the resource name/ID and landlord_id.
 
@@ -254,6 +255,8 @@ r.Route("/audit", func(r chi.Router) {
 })
 ```
 
+**Note on Dashboard "Recent Activities":** The business logic reference describes a `GET /dashboard/recent-activities` endpoint that also reads audit logs. That endpoint belongs to the Dashboard module (separate future task) and will be a simplified view with human-readable descriptions. `/audit/landlord` is the full audit query interface with filters. The Dashboard module will reuse `AuditRepository.List()` but add a presentation layer that converts raw actions into human-readable strings.
+
 ---
 
 ## 7. Testing
@@ -261,7 +264,7 @@ r.Route("/audit", func(r chi.Router) {
 ### 7.1 New Tests (~25-30)
 
 - **AuditEntry** validation tests (required fields)
-- **BufferedAuditLogger** — mock Redis + mock MongoAuditRepo, verify entries flow
+- **BufferedAuditLogger** — mock Redis + mock MongoAuditRepo, verify entries flow; must be thread-safe (test with `go test -race`)
 - **ListAuditLogsUseCase** — limit clamping, filter passthrough
 - **ListLandlordAuditLogsUseCase** — landlord scoping injection
 - **AuditHandler** — List success, LandlordList success, invalid filters
