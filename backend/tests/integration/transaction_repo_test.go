@@ -196,7 +196,7 @@ func TestTransactionRepo_Verify(t *testing.T) {
 	}
 
 	// Verify the transaction (using domain method)
-	verifierID := uuid.New()
+	verifierID := createTestLandlord(t)
 	if err := tx.Verify(verifierID); err != nil {
 		t.Fatalf("Verify failed: %v", err)
 	}
