@@ -9,15 +9,17 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
 	"github.com/ISubamariner/guimba-go/backend/tests/helpers"
 )
 
 var (
-	testPgPool  *pgxpool.Pool
-	testMongoDB *mongo.Database
-	testTC      *helpers.TestContainers
+	testPgPool     *pgxpool.Pool
+	testMongoDB    *mongo.Database
+	testRedis      *redis.Client
+	testTC         *helpers.TestContainers
 )
 
 func TestMain(m *testing.M) {
@@ -29,6 +31,7 @@ func TestMain(m *testing.M) {
 
 	testPgPool = testTC.PgPool
 	testMongoDB = testTC.MongoDB
+	testRedis = testTC.RedisClient
 
 	code := m.Run()
 

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
@@ -20,16 +21,19 @@ import (
 
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	tcmongodb "github.com/testcontainers/testcontainers-go/modules/mongodb"
+	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 // TestContainers holds test database connections.
 type TestContainers struct {
-	PgPool       *pgxpool.Pool
-	MongoDB      *mongo.Database
-	pgContainer  *tcpostgres.PostgresContainer
+	PgPool         *pgxpool.Pool
+	MongoDB        *mongo.Database
+	RedisClient    *redis.Client
+	pgContainer    *tcpostgres.PostgresContainer
 	mongoContainer *tcmongodb.MongoDBContainer
+	redisContainer *tcredis.RedisContainer
 }
 
 // SetupContainers starts Postgres + MongoDB containers and runs migrations.
@@ -104,6 +108,25 @@ func SetupContainers() (*TestContainers, error) {
 	}
 	tc.MongoDB = mongoClient.Database("guimba_test")
 
+	// Start Redis
+	redisContainer, err := tcredis.Run(ctx, "redis:7-alpine")
+	if err != nil {
+		return nil, fmt.Errorf("starting redis container: %w", err)
+	}
+	tc.redisContainer = redisContainer
+
+	redisEndpoint, err := redisContainer.Endpoint(ctx, "")
+	if err != nil {
+		return nil, fmt.Errorf("getting redis endpoint: %w", err)
+	}
+
+	tc.RedisClient = redis.NewClient(&redis.Options{
+		Addr: redisEndpoint,
+	})
+	if err := tc.RedisClient.Ping(ctx).Err(); err != nil {
+		return nil, fmt.Errorf("pinging redis: %w", err)
+	}
+
 	return tc, nil
 }
 
@@ -129,6 +152,13 @@ func (tc *TestContainers) TruncateAll(ctx context.Context) error {
 		log.Printf("warning: could not drop audit_logs: %v", err)
 	}
 
+	// Flush Redis
+	if tc.RedisClient != nil {
+		if err := tc.RedisClient.FlushAll(ctx).Err(); err != nil {
+			log.Printf("warning: could not flush redis: %v", err)
+		}
+	}
+
 	return nil
 }
 
@@ -143,6 +173,11 @@ func (tc *TestContainers) Cleanup() {
 			log.Printf("warning: failed to disconnect mongo client: %v", err)
 		}
 	}
+	if tc.RedisClient != nil {
+		if err := tc.RedisClient.Close(); err != nil {
+			log.Printf("warning: failed to close redis client: %v", err)
+		}
+	}
 	if tc.pgContainer != nil {
 		if err := tc.pgContainer.Terminate(ctx); err != nil {
 			log.Printf("warning: failed to terminate postgres container: %v", err)
@@ -151,6 +186,11 @@ func (tc *TestContainers) Cleanup() {
 	if tc.mongoContainer != nil {
 		if err := tc.mongoContainer.Terminate(ctx); err != nil {
 			log.Printf("warning: failed to terminate mongo container: %v", err)
+		}
+	}
+	if tc.redisContainer != nil {
+		if err := tc.redisContainer.Terminate(ctx); err != nil {
+			log.Printf("warning: failed to terminate redis container: %v", err)
 		}
 	}
 }
