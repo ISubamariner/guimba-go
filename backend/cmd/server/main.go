@@ -20,6 +20,7 @@ import (
 	audituc "github.com/ISubamariner/guimba-go/backend/internal/usecase/audit"
 	authuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/auth"
 	beneficiaryuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/beneficiary"
+	dashuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/dashboard"
 	debtuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/debt"
 	programuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/program"
 	propertyuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/property"
@@ -178,6 +179,11 @@ func main() {
 	verifyTransactionUC := transactionuc.NewVerifyTransactionUseCase(transactionRepo, auditRepo)
 	transactionHandler := handler.NewTransactionHandler(recordPaymentUC, recordRefundUC, getTransactionUC, listTransactionsUC, verifyTransactionUC)
 
+	// Wire Dashboard module
+	getStatsUC := dashuc.NewGetStatsUseCase(tenantRepo, propertyRepo, debtRepo)
+	getRecentActivitiesUC := dashuc.NewGetRecentActivitiesUseCase(auditRepo)
+	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getRecentActivitiesUC)
+
 	// Set up router
 	r := router.NewRouter(router.Handlers{
 		Health:      healthHandler,
@@ -190,6 +196,7 @@ func main() {
 		Debt:        debtHandler,
 		Transaction: transactionHandler,
 		Audit:       auditHandler,
+		Dashboard:   dashboardHandler,
 	}, cfg.App.FrontendURL, jwtManager, tokenBlocklist)
 
 	srv := &http.Server{

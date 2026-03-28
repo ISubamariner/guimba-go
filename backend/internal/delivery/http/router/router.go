@@ -25,6 +25,7 @@ type Handlers struct {
 	Debt        *handler.DebtHandler
 	Transaction *handler.TransactionHandler
 	Audit       *handler.AuditHandler
+	Dashboard   *handler.DashboardHandler
 }
 
 // NewRouter creates and configures the Chi router with all middleware and routes.
@@ -170,6 +171,13 @@ func NewRouter(h Handlers, frontendURL string, jwtManager *auth.JWTManager, bloc
 				r.Get("/", h.Audit.List)
 			})
 			r.Get("/landlord", h.Audit.LandlordList)
+		})
+
+		// Dashboard (authenticated)
+		r.Route("/dashboard", func(r chi.Router) {
+			r.Use(requireAuth)
+			r.Get("/stats", h.Dashboard.Stats)
+			r.Get("/recent-activities", h.Dashboard.RecentActivities)
 		})
 	})
 
