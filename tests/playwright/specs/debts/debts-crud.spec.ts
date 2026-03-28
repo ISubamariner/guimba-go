@@ -61,12 +61,9 @@ test.describe("Debts", () => {
     await debtsPage.clickPayButton(row);
     await debtsPage.submitPayForm(); // Default: full balance
 
-    // Wait for modal to close and status to update
-    await authedPage.waitForTimeout(1000);
-    await debtsPage.goto(); // Refresh to see updated status
-
-    const updatedRow = debtsPage.getRowByDescription(description);
-    await expect(debtsPage.getStatusBadge(updatedRow)).toHaveText("PAID");
+    // Wait for modal to close, then verify status updated
+    await authedPage.waitForSelector("dialog[open]", { state: "detached" });
+    await expect(debtsPage.getStatusBadge(row)).toHaveText("PAID", { timeout: 10_000 });
   });
 
   test("cancel a debt and verify status changes to CANCELLED", async ({ authedPage }) => {
@@ -91,10 +88,8 @@ test.describe("Debts", () => {
     await debtsPage.fillCancelReason("E2E test cancellation");
     await debtsPage.submitCancelForm();
 
-    await authedPage.waitForTimeout(1000);
-    await debtsPage.goto();
-
-    const updatedRow = debtsPage.getRowByDescription(description);
-    await expect(debtsPage.getStatusBadge(updatedRow)).toHaveText("CANCELLED");
+    // Wait for modal to close, then verify status updated
+    await authedPage.waitForSelector("dialog[open]", { state: "detached" });
+    await expect(debtsPage.getStatusBadge(row)).toHaveText("CANCELLED", { timeout: 10_000 });
   });
 });

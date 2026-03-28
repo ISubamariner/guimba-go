@@ -5,6 +5,7 @@ export class DashboardPage {
 
   async goto() {
     await this.page.goto("/dashboard");
+    await this.page.waitForSelector("h1:has-text('Dashboard')");
   }
 
   getHeading() {

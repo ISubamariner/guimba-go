@@ -8,12 +8,7 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": ".",
-    "baseUrl": ".",
-    "paths": {
-      "@pages/*": ["./pages/*"],
-      "@helpers/*": ["./helpers/*"],
-      "@fixtures/*": ["./fixtures/*"]
-    }
+    "baseUrl": "."
   },
   "include": ["**/*.ts"]
 }

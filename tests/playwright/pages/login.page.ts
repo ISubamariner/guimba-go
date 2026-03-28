@@ -13,15 +13,11 @@ export class LoginPage {
     await this.page.click('button[type="submit"]');
   }
 
-  async getErrorMessage(): Promise<string | null> {
-    const error = this.page.locator(".bg-danger-light");
-    if (await error.isVisible()) {
-      return error.textContent();
-    }
-    return null;
+  getErrorMessage() {
+    return this.page.locator(".bg-danger-light");
   }
 
-  async getHeading(): Promise<string | null> {
-    return this.page.locator("h1").textContent();
+  getHeading() {
+    return this.page.locator("h1");
   }
 }
