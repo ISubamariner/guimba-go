@@ -720,7 +720,7 @@ Port order:
   - [x] Transactions specs (deterministic data setup, table columns)
   - [x] Audit specs (deterministic data setup, table columns)
   - [x] Sidebar navigation specs (nav items, active route highlighting, sign out)
-- [ ] Establish visual regression baselines for key pages
+- [ ] ~~Establish visual regression baselines for key pages~~ (deferred — add when UI stabilizes)
 
 ---
 
