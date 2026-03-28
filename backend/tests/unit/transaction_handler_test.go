@@ -21,11 +21,12 @@ import (
 )
 
 func newTransactionHandler(txRepo *mocks.TransactionRepositoryMock, debtRepo *mocks.DebtRepositoryMock, userRepo *mocks.UserRepositoryMock, tenantRepo *mocks.TenantRepositoryMock) *handler.TransactionHandler {
-	recordPaymentUC := txuc.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo)
-	recordRefundUC := txuc.NewRecordRefundUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	auditRepo := &mocks.AuditRepositoryMock{}
+	recordPaymentUC := txuc.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo, auditRepo)
+	recordRefundUC := txuc.NewRecordRefundUseCase(txRepo, debtRepo, userRepo, tenantRepo, auditRepo)
 	getUC := txuc.NewGetTransactionUseCase(txRepo)
 	listUC := txuc.NewListTransactionsUseCase(txRepo)
-	verifyUC := txuc.NewVerifyTransactionUseCase(txRepo)
+	verifyUC := txuc.NewVerifyTransactionUseCase(txRepo, auditRepo)
 	return handler.NewTransactionHandler(recordPaymentUC, recordRefundUC, getUC, listUC, verifyUC)
 }
 

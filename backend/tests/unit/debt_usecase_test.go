@@ -44,7 +44,7 @@ func TestCreateDebt_Success(t *testing.T) {
 	}
 	propRepo := &mocks.PropertyRepositoryMock{}
 
-	uc := debt.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propRepo)
+	uc := debt.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propRepo, &mocks.AuditRepositoryMock{})
 	d := newTestDebt(tenantID, landlordID, 1000)
 	err := uc.Execute(context.Background(), d)
 	if err != nil {
@@ -66,7 +66,7 @@ func TestCreateDebt_TenantNotFound(t *testing.T) {
 	}
 	propRepo := &mocks.PropertyRepositoryMock{}
 
-	uc := debt.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propRepo)
+	uc := debt.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propRepo, &mocks.AuditRepositoryMock{})
 	d := newTestDebt(uuid.New(), uuid.New(), 1000)
 	err := uc.Execute(context.Background(), d)
 	if err == nil {
@@ -98,7 +98,7 @@ func TestCreateDebt_WithProperty_Success(t *testing.T) {
 		},
 	}
 
-	uc := debt.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propRepo)
+	uc := debt.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propRepo, &mocks.AuditRepositoryMock{})
 	m, _ := entity.NewMoney(decimal.NewFromFloat(500), entity.CurrencyPHP)
 	d, _ := entity.NewDebt(tenantID, landlordID, &propID, entity.DebtTypeRent, "Rent", m, time.Now().Add(30*24*time.Hour), nil)
 	err := uc.Execute(context.Background(), d)
@@ -232,7 +232,7 @@ func TestUpdateDebt_Success(t *testing.T) {
 		},
 		UpdateFn: func(ctx context.Context, d *entity.Debt) error { return nil },
 	}
-	uc := debt.NewUpdateDebtUseCase(debtRepo)
+	uc := debt.NewUpdateDebtUseCase(debtRepo, &mocks.AuditRepositoryMock{})
 
 	updates := &entity.Debt{Description: "Updated rent description", DebtType: entity.DebtTypeRent, DueDate: time.Now().Add(60 * 24 * time.Hour)}
 	err := uc.Execute(context.Background(), debtID, updates)
@@ -247,7 +247,7 @@ func TestUpdateDebt_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	uc := debt.NewUpdateDebtUseCase(debtRepo)
+	uc := debt.NewUpdateDebtUseCase(debtRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New(), &entity.Debt{Description: "x", DebtType: entity.DebtTypeRent, DueDate: time.Now().Add(24 * time.Hour)})
 	if err == nil {
 		t.Fatal("expected not found error")
@@ -269,7 +269,7 @@ func TestCancelDebt_Success(t *testing.T) {
 			return nil
 		},
 	}
-	uc := debt.NewCancelDebtUseCase(debtRepo)
+	uc := debt.NewCancelDebtUseCase(debtRepo, &mocks.AuditRepositoryMock{})
 	reason := "No longer valid"
 	err := uc.Execute(context.Background(), existing.ID, &reason)
 	if err != nil {
@@ -287,7 +287,7 @@ func TestCancelDebt_AlreadyPaid(t *testing.T) {
 			return existing, nil
 		},
 	}
-	uc := debt.NewCancelDebtUseCase(debtRepo)
+	uc := debt.NewCancelDebtUseCase(debtRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), existing.ID, nil)
 	if err != entity.ErrDebtAlreadyPaid {
 		t.Fatalf("expected ErrDebtAlreadyPaid, got %v", err)
@@ -305,7 +305,7 @@ func TestCancelDebt_AlreadyCancelled(t *testing.T) {
 		},
 		UpdateFn: func(ctx context.Context, d *entity.Debt) error { return nil },
 	}
-	uc := debt.NewCancelDebtUseCase(debtRepo)
+	uc := debt.NewCancelDebtUseCase(debtRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), existing.ID, nil)
 	// Cancel on already-cancelled is idempotent (no error), status stays CANCELLED
 	if err != nil {
@@ -328,7 +328,7 @@ func TestMarkDebtPaid_Success(t *testing.T) {
 			return nil
 		},
 	}
-	uc := debt.NewMarkDebtPaidUseCase(debtRepo)
+	uc := debt.NewMarkDebtPaidUseCase(debtRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), existing.ID)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -345,7 +345,7 @@ func TestDeleteDebt_Success(t *testing.T) {
 		},
 		DeleteFn: func(ctx context.Context, id uuid.UUID) error { return nil },
 	}
-	uc := debt.NewDeleteDebtUseCase(debtRepo)
+	uc := debt.NewDeleteDebtUseCase(debtRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), existing.ID)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -358,7 +358,7 @@ func TestDeleteDebt_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	uc := debt.NewDeleteDebtUseCase(debtRepo)
+	uc := debt.NewDeleteDebtUseCase(debtRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New())
 	if err == nil {
 		t.Fatal("expected not found error")

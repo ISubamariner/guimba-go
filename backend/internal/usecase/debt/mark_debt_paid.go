@@ -10,11 +10,12 @@ import (
 )
 
 type MarkDebtPaidUseCase struct {
-	repo repository.DebtRepository
+	repo      repository.DebtRepository
+	auditRepo repository.AuditRepository
 }
 
-func NewMarkDebtPaidUseCase(repo repository.DebtRepository) *MarkDebtPaidUseCase {
-	return &MarkDebtPaidUseCase{repo: repo}
+func NewMarkDebtPaidUseCase(repo repository.DebtRepository, auditRepo repository.AuditRepository) *MarkDebtPaidUseCase {
+	return &MarkDebtPaidUseCase{repo: repo, auditRepo: auditRepo}
 }
 
 func (uc *MarkDebtPaidUseCase) Execute(ctx context.Context, id uuid.UUID) error {
@@ -31,5 +32,17 @@ func (uc *MarkDebtPaidUseCase) Execute(ctx context.Context, id uuid.UUID) error 
 		return err
 	}
 
-	return uc.repo.Update(ctx, d)
+	if err := uc.repo.Update(ctx, d); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "MARK_DEBT_PAID",
+		ResourceType: "Debt",
+		ResourceID:   id,
+		Success:      true,
+		Metadata:     map[string]any{"landlord_id": d.LandlordID.String(), "tenant_id": d.TenantID.String(), "amount": d.OriginalAmount.Amount.String()},
+	})
+
+	return nil
 }

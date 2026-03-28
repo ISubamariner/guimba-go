@@ -153,22 +153,22 @@ func main() {
 	propertyHandler := handler.NewPropertyHandler(createPropertyUC, getPropertyUC, listPropertiesUC, updatePropertyUC, deactivatePropertyUC, deletePropertyUC)
 
 	// Wire Debt module
-	createDebtUC := debtuc.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propertyRepo)
+	createDebtUC := debtuc.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propertyRepo, auditRepo)
 	getDebtUC := debtuc.NewGetDebtUseCase(debtRepo)
 	listDebtsUC := debtuc.NewListDebtsUseCase(debtRepo)
-	updateDebtUC := debtuc.NewUpdateDebtUseCase(debtRepo)
-	cancelDebtUC := debtuc.NewCancelDebtUseCase(debtRepo)
-	markDebtPaidUC := debtuc.NewMarkDebtPaidUseCase(debtRepo)
-	deleteDebtUC := debtuc.NewDeleteDebtUseCase(debtRepo)
+	updateDebtUC := debtuc.NewUpdateDebtUseCase(debtRepo, auditRepo)
+	cancelDebtUC := debtuc.NewCancelDebtUseCase(debtRepo, auditRepo)
+	markDebtPaidUC := debtuc.NewMarkDebtPaidUseCase(debtRepo, auditRepo)
+	deleteDebtUC := debtuc.NewDeleteDebtUseCase(debtRepo, auditRepo)
 	debtHandler := handler.NewDebtHandler(createDebtUC, getDebtUC, listDebtsUC, updateDebtUC, cancelDebtUC, markDebtPaidUC, deleteDebtUC)
 
 	// Wire Transaction module
 	transactionRepo := pg.NewTransactionRepoPG(pgPool)
-	recordPaymentUC := transactionuc.NewRecordPaymentUseCase(transactionRepo, debtRepo, userRepo, tenantRepo)
-	recordRefundUC := transactionuc.NewRecordRefundUseCase(transactionRepo, debtRepo, userRepo, tenantRepo)
+	recordPaymentUC := transactionuc.NewRecordPaymentUseCase(transactionRepo, debtRepo, userRepo, tenantRepo, auditRepo)
+	recordRefundUC := transactionuc.NewRecordRefundUseCase(transactionRepo, debtRepo, userRepo, tenantRepo, auditRepo)
 	getTransactionUC := transactionuc.NewGetTransactionUseCase(transactionRepo)
 	listTransactionsUC := transactionuc.NewListTransactionsUseCase(transactionRepo)
-	verifyTransactionUC := transactionuc.NewVerifyTransactionUseCase(transactionRepo)
+	verifyTransactionUC := transactionuc.NewVerifyTransactionUseCase(transactionRepo, auditRepo)
 	transactionHandler := handler.NewTransactionHandler(recordPaymentUC, recordRefundUC, getTransactionUC, listTransactionsUC, verifyTransactionUC)
 
 	// Set up router

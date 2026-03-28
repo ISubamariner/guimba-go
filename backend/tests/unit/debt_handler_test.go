@@ -21,13 +21,14 @@ import (
 )
 
 func newDebtHandler(debtRepo *mocks.DebtRepositoryMock, userRepo *mocks.UserRepositoryMock, tenantRepo *mocks.TenantRepositoryMock, propRepo *mocks.PropertyRepositoryMock) *handler.DebtHandler {
-	createUC := debtuc.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propRepo)
+	auditRepo := &mocks.AuditRepositoryMock{}
+	createUC := debtuc.NewCreateDebtUseCase(debtRepo, userRepo, tenantRepo, propRepo, auditRepo)
 	getUC := debtuc.NewGetDebtUseCase(debtRepo)
 	listUC := debtuc.NewListDebtsUseCase(debtRepo)
-	updateUC := debtuc.NewUpdateDebtUseCase(debtRepo)
-	cancelUC := debtuc.NewCancelDebtUseCase(debtRepo)
-	markPaidUC := debtuc.NewMarkDebtPaidUseCase(debtRepo)
-	deleteUC := debtuc.NewDeleteDebtUseCase(debtRepo)
+	updateUC := debtuc.NewUpdateDebtUseCase(debtRepo, auditRepo)
+	cancelUC := debtuc.NewCancelDebtUseCase(debtRepo, auditRepo)
+	markPaidUC := debtuc.NewMarkDebtPaidUseCase(debtRepo, auditRepo)
+	deleteUC := debtuc.NewDeleteDebtUseCase(debtRepo, auditRepo)
 	return handler.NewDebtHandler(createUC, getUC, listUC, updateUC, cancelUC, markPaidUC, deleteUC)
 }
 

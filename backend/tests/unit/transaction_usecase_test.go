@@ -44,7 +44,7 @@ func TestRecordPayment_Success(t *testing.T) {
 		},
 	}
 
-	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo, &mocks.AuditRepositoryMock{})
 
 	amount, _ := entity.NewMoney(decimal.NewFromFloat(300), entity.CurrencyPHP)
 	recorderID := uuid.New()
@@ -70,7 +70,7 @@ func TestRecordPayment_DebtNotFound(t *testing.T) {
 	userRepo := &mocks.UserRepositoryMock{}
 	tenantRepo := &mocks.TenantRepositoryMock{}
 
-	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo, &mocks.AuditRepositoryMock{})
 	amount, _ := entity.NewMoney(decimal.NewFromFloat(100), entity.CurrencyPHP)
 	_, err := uc.Execute(context.Background(), uuid.New(), uuid.New(), nil, amount, entity.PaymentMethodCash, time.Now(), "Payment", nil, nil)
 	if err == nil {
@@ -90,7 +90,7 @@ func TestRecordPayment_Overpayment(t *testing.T) {
 	userRepo := &mocks.UserRepositoryMock{}
 	tenantRepo := &mocks.TenantRepositoryMock{}
 
-	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo, &mocks.AuditRepositoryMock{})
 	amount, _ := entity.NewMoney(decimal.NewFromFloat(200), entity.CurrencyPHP)
 	_, err := uc.Execute(context.Background(), d.ID, uuid.New(), nil, amount, entity.PaymentMethodCash, time.Now(), "Over", nil, nil)
 	if err != entity.ErrDebtOverpayment {
@@ -114,7 +114,7 @@ func TestRecordPayment_DuplicateReference(t *testing.T) {
 	userRepo := &mocks.UserRepositoryMock{}
 	tenantRepo := &mocks.TenantRepositoryMock{}
 
-	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo, &mocks.AuditRepositoryMock{})
 	amount, _ := entity.NewMoney(decimal.NewFromFloat(100), entity.CurrencyPHP)
 	ref := "REF-001"
 	_, err := uc.Execute(context.Background(), d.ID, uuid.New(), nil, amount, entity.PaymentMethodCash, time.Now(), "Payment", nil, &ref)
@@ -137,7 +137,7 @@ func TestRecordPayment_AlreadyPaid(t *testing.T) {
 	userRepo := &mocks.UserRepositoryMock{}
 	tenantRepo := &mocks.TenantRepositoryMock{}
 
-	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	uc := transaction.NewRecordPaymentUseCase(txRepo, debtRepo, userRepo, tenantRepo, &mocks.AuditRepositoryMock{})
 	amount, _ := entity.NewMoney(decimal.NewFromFloat(50), entity.CurrencyPHP)
 	_, err := uc.Execute(context.Background(), d.ID, uuid.New(), nil, amount, entity.PaymentMethodCash, time.Now(), "Late", nil, nil)
 	if err != entity.ErrDebtAlreadyPaid {
@@ -175,7 +175,7 @@ func TestRecordRefund_Success(t *testing.T) {
 		},
 	}
 
-	uc := transaction.NewRecordRefundUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	uc := transaction.NewRecordRefundUseCase(txRepo, debtRepo, userRepo, tenantRepo, &mocks.AuditRepositoryMock{})
 	refundAmount, _ := entity.NewMoney(decimal.NewFromFloat(200), entity.CurrencyPHP)
 	recorderID := uuid.New()
 	tx, err := uc.Execute(context.Background(), d.ID, tenantID, &recorderID, refundAmount, entity.PaymentMethodCash, time.Now(), "Partial refund", nil)
@@ -202,7 +202,7 @@ func TestRecordRefund_ZeroPayments(t *testing.T) {
 	userRepo := &mocks.UserRepositoryMock{}
 	tenantRepo := &mocks.TenantRepositoryMock{}
 
-	uc := transaction.NewRecordRefundUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	uc := transaction.NewRecordRefundUseCase(txRepo, debtRepo, userRepo, tenantRepo, &mocks.AuditRepositoryMock{})
 	refundAmount, _ := entity.NewMoney(decimal.NewFromFloat(100), entity.CurrencyPHP)
 	_, err := uc.Execute(context.Background(), d.ID, uuid.New(), nil, refundAmount, entity.PaymentMethodCash, time.Now(), "Refund", nil)
 	if err != entity.ErrInsufficientAmount {
@@ -224,7 +224,7 @@ func TestRecordRefund_ExceedsAmountPaid(t *testing.T) {
 	userRepo := &mocks.UserRepositoryMock{}
 	tenantRepo := &mocks.TenantRepositoryMock{}
 
-	uc := transaction.NewRecordRefundUseCase(txRepo, debtRepo, userRepo, tenantRepo)
+	uc := transaction.NewRecordRefundUseCase(txRepo, debtRepo, userRepo, tenantRepo, &mocks.AuditRepositoryMock{})
 	refundAmount, _ := entity.NewMoney(decimal.NewFromFloat(200), entity.CurrencyPHP)
 	_, err := uc.Execute(context.Background(), d.ID, uuid.New(), nil, refundAmount, entity.PaymentMethodCash, time.Now(), "Too much", nil)
 	if err != entity.ErrInsufficientAmount {
@@ -316,7 +316,7 @@ func TestVerifyTransaction_Success(t *testing.T) {
 		},
 		UpdateFn: func(ctx context.Context, t *entity.Transaction) error { return nil },
 	}
-	uc := transaction.NewVerifyTransactionUseCase(txRepo)
+	uc := transaction.NewVerifyTransactionUseCase(txRepo, &mocks.AuditRepositoryMock{})
 	verifierID := uuid.New()
 	err := uc.Execute(context.Background(), tx.ID, verifierID)
 	if err != nil {
@@ -337,7 +337,7 @@ func TestVerifyTransaction_AlreadyVerified(t *testing.T) {
 			return tx, nil
 		},
 	}
-	uc := transaction.NewVerifyTransactionUseCase(txRepo)
+	uc := transaction.NewVerifyTransactionUseCase(txRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), tx.ID, uuid.New())
 	if err != entity.ErrTransactionAlreadyVerified {
 		t.Fatalf("expected ErrTransactionAlreadyVerified, got %v", err)
@@ -350,7 +350,7 @@ func TestVerifyTransaction_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	uc := transaction.NewVerifyTransactionUseCase(txRepo)
+	uc := transaction.NewVerifyTransactionUseCase(txRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New(), uuid.New())
 	if err == nil {
 		t.Fatal("expected not found error")

@@ -10,11 +10,12 @@ import (
 )
 
 type DeleteDebtUseCase struct {
-	repo repository.DebtRepository
+	repo      repository.DebtRepository
+	auditRepo repository.AuditRepository
 }
 
-func NewDeleteDebtUseCase(repo repository.DebtRepository) *DeleteDebtUseCase {
-	return &DeleteDebtUseCase{repo: repo}
+func NewDeleteDebtUseCase(repo repository.DebtRepository, auditRepo repository.AuditRepository) *DeleteDebtUseCase {
+	return &DeleteDebtUseCase{repo: repo, auditRepo: auditRepo}
 }
 
 func (uc *DeleteDebtUseCase) Execute(ctx context.Context, id uuid.UUID) error {
@@ -26,5 +27,17 @@ func (uc *DeleteDebtUseCase) Execute(ctx context.Context, id uuid.UUID) error {
 		return apperror.NewNotFound("Debt", id)
 	}
 
-	return uc.repo.Delete(ctx, id)
+	if err := uc.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "DELETE_DEBT",
+		ResourceType: "Debt",
+		ResourceID:   id,
+		Success:      true,
+		Metadata:     map[string]any{"landlord_id": existing.LandlordID.String(), "tenant_id": existing.TenantID.String()},
+	})
+
+	return nil
 }

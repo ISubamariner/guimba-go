@@ -13,10 +13,11 @@ type CreateDebtUseCase struct {
 	userRepo   repository.UserRepository
 	tenantRepo repository.TenantRepository
 	propRepo   repository.PropertyRepository
+	auditRepo  repository.AuditRepository
 }
 
-func NewCreateDebtUseCase(repo repository.DebtRepository, userRepo repository.UserRepository, tenantRepo repository.TenantRepository, propRepo repository.PropertyRepository) *CreateDebtUseCase {
-	return &CreateDebtUseCase{repo: repo, userRepo: userRepo, tenantRepo: tenantRepo, propRepo: propRepo}
+func NewCreateDebtUseCase(repo repository.DebtRepository, userRepo repository.UserRepository, tenantRepo repository.TenantRepository, propRepo repository.PropertyRepository, auditRepo repository.AuditRepository) *CreateDebtUseCase {
+	return &CreateDebtUseCase{repo: repo, userRepo: userRepo, tenantRepo: tenantRepo, propRepo: propRepo, auditRepo: auditRepo}
 }
 
 func (uc *CreateDebtUseCase) Execute(ctx context.Context, d *entity.Debt) error {
@@ -59,5 +60,29 @@ func (uc *CreateDebtUseCase) Execute(ctx context.Context, d *entity.Debt) error 
 		}
 	}
 
-	return uc.repo.Create(ctx, d)
+	if err := uc.repo.Create(ctx, d); err != nil {
+		return err
+	}
+
+	metadata := map[string]any{
+		"landlord_id": d.LandlordID.String(),
+		"tenant_id":   d.TenantID.String(),
+		"amount":      d.OriginalAmount.Amount.String(),
+		"currency":    string(d.OriginalAmount.Currency),
+		"debt_type":   string(d.DebtType),
+		"description": d.Description,
+	}
+	if d.PropertyID != nil {
+		metadata["property_id"] = d.PropertyID.String()
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "CREATE_DEBT",
+		ResourceType: "Debt",
+		ResourceID:   d.ID,
+		Success:      true,
+		Metadata:     metadata,
+	})
+
+	return nil
 }

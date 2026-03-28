@@ -12,11 +12,12 @@ import (
 )
 
 type UpdateDebtUseCase struct {
-	repo repository.DebtRepository
+	repo      repository.DebtRepository
+	auditRepo repository.AuditRepository
 }
 
-func NewUpdateDebtUseCase(repo repository.DebtRepository) *UpdateDebtUseCase {
-	return &UpdateDebtUseCase{repo: repo}
+func NewUpdateDebtUseCase(repo repository.DebtRepository, auditRepo repository.AuditRepository) *UpdateDebtUseCase {
+	return &UpdateDebtUseCase{repo: repo, auditRepo: auditRepo}
 }
 
 func (uc *UpdateDebtUseCase) Execute(ctx context.Context, id uuid.UUID, updates *entity.Debt) error {
@@ -40,5 +41,17 @@ func (uc *UpdateDebtUseCase) Execute(ctx context.Context, id uuid.UUID, updates 
 		return err
 	}
 
-	return uc.repo.Update(ctx, existing)
+	if err := uc.repo.Update(ctx, existing); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "UPDATE_DEBT",
+		ResourceType: "Debt",
+		ResourceID:   id,
+		Success:      true,
+		Metadata:     map[string]any{"landlord_id": existing.LandlordID.String(), "description": existing.Description},
+	})
+
+	return nil
 }

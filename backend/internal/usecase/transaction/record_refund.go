@@ -16,10 +16,11 @@ type RecordRefundUseCase struct {
 	debtRepo   repository.DebtRepository
 	userRepo   repository.UserRepository
 	tenantRepo repository.TenantRepository
+	auditRepo  repository.AuditRepository
 }
 
-func NewRecordRefundUseCase(txRepo repository.TransactionRepository, debtRepo repository.DebtRepository, userRepo repository.UserRepository, tenantRepo repository.TenantRepository) *RecordRefundUseCase {
-	return &RecordRefundUseCase{txRepo: txRepo, debtRepo: debtRepo, userRepo: userRepo, tenantRepo: tenantRepo}
+func NewRecordRefundUseCase(txRepo repository.TransactionRepository, debtRepo repository.DebtRepository, userRepo repository.UserRepository, tenantRepo repository.TenantRepository, auditRepo repository.AuditRepository) *RecordRefundUseCase {
+	return &RecordRefundUseCase{txRepo: txRepo, debtRepo: debtRepo, userRepo: userRepo, tenantRepo: tenantRepo, auditRepo: auditRepo}
 }
 
 func (uc *RecordRefundUseCase) Execute(ctx context.Context, debtID, tenantID uuid.UUID, recordedBy *uuid.UUID, amount entity.Money, method entity.PaymentMethod, refundDate time.Time, description string, reference *string) (*entity.Transaction, error) {
@@ -50,6 +51,19 @@ func (uc *RecordRefundUseCase) Execute(ctx context.Context, debtID, tenantID uui
 	if err := uc.debtRepo.Update(ctx, d); err != nil {
 		return nil, err
 	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "APPLY_REFUND",
+		ResourceType: "Transaction",
+		ResourceID:   tx.ID,
+		Success:      true,
+		Metadata: map[string]any{
+			"landlord_id":   d.LandlordID.String(),
+			"tenant_id":    d.TenantID.String(),
+			"refund_amount": amount.Amount.String(),
+			"currency":     string(amount.Currency),
+		},
+	})
 
 	return tx, nil
 }

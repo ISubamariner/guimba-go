@@ -10,11 +10,12 @@ import (
 )
 
 type CancelDebtUseCase struct {
-	repo repository.DebtRepository
+	repo      repository.DebtRepository
+	auditRepo repository.AuditRepository
 }
 
-func NewCancelDebtUseCase(repo repository.DebtRepository) *CancelDebtUseCase {
-	return &CancelDebtUseCase{repo: repo}
+func NewCancelDebtUseCase(repo repository.DebtRepository, auditRepo repository.AuditRepository) *CancelDebtUseCase {
+	return &CancelDebtUseCase{repo: repo, auditRepo: auditRepo}
 }
 
 func (uc *CancelDebtUseCase) Execute(ctx context.Context, id uuid.UUID, reason *string) error {
@@ -30,5 +31,22 @@ func (uc *CancelDebtUseCase) Execute(ctx context.Context, id uuid.UUID, reason *
 		return err
 	}
 
-	return uc.repo.Update(ctx, d)
+	if err := uc.repo.Update(ctx, d); err != nil {
+		return err
+	}
+
+	metadata := map[string]any{"landlord_id": d.LandlordID.String(), "tenant_id": d.TenantID.String()}
+	if reason != nil {
+		metadata["reason"] = *reason
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "CANCEL_DEBT",
+		ResourceType: "Debt",
+		ResourceID:   id,
+		Success:      true,
+		Metadata:     metadata,
+	})
+
+	return nil
 }
