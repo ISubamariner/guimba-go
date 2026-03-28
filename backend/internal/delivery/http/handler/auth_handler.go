@@ -18,12 +18,13 @@ import (
 
 // AuthHandler handles authentication requests.
 type AuthHandler struct {
-	registerUC *authuc.RegisterUseCase
-	loginUC    *authuc.LoginUseCase
-	refreshUC  *authuc.RefreshTokenUseCase
-	profileUC  *authuc.GetProfileUseCase
-	jwt        *auth.JWTManager
-	blocklist  *cache.TokenBlocklist
+	registerUC       *authuc.RegisterUseCase
+	loginUC          *authuc.LoginUseCase
+	refreshUC        *authuc.RefreshTokenUseCase
+	profileUC        *authuc.GetProfileUseCase
+	changePasswordUC *authuc.ChangePasswordUseCase
+	jwt              *auth.JWTManager
+	blocklist        *cache.TokenBlocklist
 }
 
 // NewAuthHandler creates a new AuthHandler.
@@ -32,16 +33,18 @@ func NewAuthHandler(
 	loginUC *authuc.LoginUseCase,
 	refreshUC *authuc.RefreshTokenUseCase,
 	profileUC *authuc.GetProfileUseCase,
+	changePasswordUC *authuc.ChangePasswordUseCase,
 	jwt *auth.JWTManager,
 	blocklist *cache.TokenBlocklist,
 ) *AuthHandler {
 	return &AuthHandler{
-		registerUC: registerUC,
-		loginUC:    loginUC,
-		refreshUC:  refreshUC,
-		profileUC:  profileUC,
-		jwt:        jwt,
-		blocklist:  blocklist,
+		registerUC:       registerUC,
+		loginUC:          loginUC,
+		refreshUC:        refreshUC,
+		profileUC:        profileUC,
+		changePasswordUC: changePasswordUC,
+		jwt:              jwt,
+		blocklist:        blocklist,
 	}
 }
 
@@ -209,6 +212,45 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		if remaining > 0 {
 			_ = h.blocklist.Block(r.Context(), claims.ID, remaining)
 		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// ChangePassword godoc
+// @Summary      Change password
+// @Description  Changes the authenticated user's password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body  dto.ChangePasswordRequest  true  "Password change data"
+// @Success      204   "No Content"
+// @Failure      400   {object}  apperror.ErrorResponse
+// @Failure      401   {object}  apperror.ErrorResponse
+// @Failure      422   {object}  apperror.ErrorResponse
+// @Router       /api/v1/auth/change-password [post]
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.AuthUserIDKey).(uuid.UUID)
+	if !ok {
+		apperror.WriteError(w, apperror.NewUnauthorized("User not authenticated"))
+		return
+	}
+
+	var req dto.ChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		apperror.WriteError(w, apperror.NewBadRequest("Invalid JSON request body"))
+		return
+	}
+
+	if errs := validator.ValidateStruct(req); errs != nil {
+		apperror.WriteError(w, apperror.NewValidation("Validation failed", errs...))
+		return
+	}
+
+	if err := h.changePasswordUC.Execute(r.Context(), userID, req.CurrentPassword, req.NewPassword); err != nil {
+		handleDomainError(w, err)
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)

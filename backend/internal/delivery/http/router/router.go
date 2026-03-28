@@ -69,6 +69,7 @@ func NewRouter(h Handlers, frontendURL string, jwtManager *auth.JWTManager, bloc
 				r.Use(requireAuth)
 				r.Get("/me", h.Auth.Me)
 				r.Post("/logout", h.Auth.Logout)
+				r.Post("/change-password", h.Auth.ChangePassword)
 			})
 		})
 

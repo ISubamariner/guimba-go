@@ -20,6 +20,7 @@ type UserRepositoryMock struct {
 	AssignRoleFn      func(ctx context.Context, userID, roleID uuid.UUID) error
 	RemoveRoleFn      func(ctx context.Context, userID, roleID uuid.UUID) error
 	UpdateLastLoginFn func(ctx context.Context, id uuid.UUID) error
+	UpdatePasswordFn  func(ctx context.Context, userID uuid.UUID, hashedPassword string) error
 }
 
 func (m *UserRepositoryMock) Create(ctx context.Context, user *entity.User) error {
@@ -81,6 +82,13 @@ func (m *UserRepositoryMock) RemoveRole(ctx context.Context, userID, roleID uuid
 func (m *UserRepositoryMock) UpdateLastLogin(ctx context.Context, id uuid.UUID) error {
 	if m.UpdateLastLoginFn != nil {
 		return m.UpdateLastLoginFn(ctx, id)
+	}
+	return nil
+}
+
+func (m *UserRepositoryMock) UpdatePassword(ctx context.Context, userID uuid.UUID, hashedPassword string) error {
+	if m.UpdatePasswordFn != nil {
+		return m.UpdatePasswordFn(ctx, userID, hashedPassword)
 	}
 	return nil
 }

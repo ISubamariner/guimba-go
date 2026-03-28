@@ -28,4 +28,5 @@ type UserRepository interface {
 	AssignRole(ctx context.Context, userID, roleID uuid.UUID) error
 	RemoveRole(ctx context.Context, userID, roleID uuid.UUID) error
 	UpdateLastLogin(ctx context.Context, id uuid.UUID) error
+	UpdatePassword(ctx context.Context, userID uuid.UUID, hashedPassword string) error
 }

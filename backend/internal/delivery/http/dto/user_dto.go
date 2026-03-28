@@ -63,6 +63,12 @@ type AssignRoleRequest struct {
 	RoleID uuid.UUID `json:"role_id" validate:"required"`
 }
 
+// ChangePasswordRequest is the request body for changing user password.
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" validate:"required"`
+	NewPassword     string `json:"new_password" validate:"required,min=8,max=128"`
+}
+
 // UserListResponse is the response body for a list of users.
 type UserListResponse struct {
 	Data   []UserResponse `json:"data"`

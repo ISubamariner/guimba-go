@@ -115,7 +115,8 @@ func main() {
 	loginUC := authuc.NewLoginUseCase(userRepo, jwtManager)
 	refreshUC := authuc.NewRefreshTokenUseCase(userRepo, jwtManager, tokenBlocklist)
 	profileUC := authuc.NewGetProfileUseCase(userRepo)
-	authHandler := handler.NewAuthHandler(registerUC, loginUC, refreshUC, profileUC, jwtManager, tokenBlocklist)
+	changePasswordUC := authuc.NewChangePasswordUseCase(userRepo)
+	authHandler := handler.NewAuthHandler(registerUC, loginUC, refreshUC, profileUC, changePasswordUC, jwtManager, tokenBlocklist)
 
 	listUsersUC := useruc.NewListUsersUseCase(userRepo)
 	updateUserUC := useruc.NewUpdateUserUseCase(userRepo)

@@ -194,6 +194,12 @@ func (r *UserRepoPG) UpdateLastLogin(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+func (r *UserRepoPG) UpdatePassword(ctx context.Context, userID uuid.UUID, hashedPassword string) error {
+	query := `UPDATE users SET hashed_password = $1, updated_at = $2 WHERE id = $3 AND deleted_at IS NULL`
+	_, err := r.pool.Exec(ctx, query, hashedPassword, time.Now().UTC(), userID)
+	return err
+}
+
 // getUserRoles retrieves all roles (with permissions) for a user.
 func (r *UserRepoPG) getUserRoles(ctx context.Context, userID uuid.UUID) ([]entity.Role, error) {
 	query := `
