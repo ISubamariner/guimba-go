@@ -10,11 +10,12 @@ import (
 )
 
 type DeletePropertyUseCase struct {
-	repo repository.PropertyRepository
+	repo      repository.PropertyRepository
+	auditRepo repository.AuditRepository
 }
 
-func NewDeletePropertyUseCase(repo repository.PropertyRepository) *DeletePropertyUseCase {
-	return &DeletePropertyUseCase{repo: repo}
+func NewDeletePropertyUseCase(repo repository.PropertyRepository, auditRepo repository.AuditRepository) *DeletePropertyUseCase {
+	return &DeletePropertyUseCase{repo: repo, auditRepo: auditRepo}
 }
 
 func (uc *DeletePropertyUseCase) Execute(ctx context.Context, id uuid.UUID) error {
@@ -26,5 +27,17 @@ func (uc *DeletePropertyUseCase) Execute(ctx context.Context, id uuid.UUID) erro
 		return apperror.NewNotFound("Property", id)
 	}
 
-	return uc.repo.Delete(ctx, id)
+	if err := uc.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "DELETE_PROPERTY",
+		ResourceType: "Property",
+		ResourceID:   id,
+		Success:      true,
+		Metadata:     map[string]any{"property_name": existing.Name, "owner_id": existing.OwnerID.String()},
+	})
+
+	return nil
 }

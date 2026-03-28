@@ -11,12 +11,13 @@ import (
 )
 
 type DeactivatePropertyUseCase struct {
-	repo     repository.PropertyRepository
-	debtRepo repository.DebtRepository
+	repo      repository.PropertyRepository
+	debtRepo  repository.DebtRepository
+	auditRepo repository.AuditRepository
 }
 
-func NewDeactivatePropertyUseCase(repo repository.PropertyRepository, debtRepo repository.DebtRepository) *DeactivatePropertyUseCase {
-	return &DeactivatePropertyUseCase{repo: repo, debtRepo: debtRepo}
+func NewDeactivatePropertyUseCase(repo repository.PropertyRepository, debtRepo repository.DebtRepository, auditRepo repository.AuditRepository) *DeactivatePropertyUseCase {
+	return &DeactivatePropertyUseCase{repo: repo, debtRepo: debtRepo, auditRepo: auditRepo}
 }
 
 func (uc *DeactivatePropertyUseCase) Execute(ctx context.Context, id uuid.UUID) error {
@@ -37,5 +38,17 @@ func (uc *DeactivatePropertyUseCase) Execute(ctx context.Context, id uuid.UUID) 
 	}
 
 	existing.IsActive = false
-	return uc.repo.Update(ctx, existing)
+	if err := uc.repo.Update(ctx, existing); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "DEACTIVATE_PROPERTY",
+		ResourceType: "Property",
+		ResourceID:   id,
+		Success:      true,
+		Metadata:     map[string]any{"property_name": existing.Name, "owner_id": existing.OwnerID.String()},
+	})
+
+	return nil
 }

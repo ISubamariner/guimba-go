@@ -11,11 +11,12 @@ import (
 )
 
 type UpdatePropertyUseCase struct {
-	repo repository.PropertyRepository
+	repo      repository.PropertyRepository
+	auditRepo repository.AuditRepository
 }
 
-func NewUpdatePropertyUseCase(repo repository.PropertyRepository) *UpdatePropertyUseCase {
-	return &UpdatePropertyUseCase{repo: repo}
+func NewUpdatePropertyUseCase(repo repository.PropertyRepository, auditRepo repository.AuditRepository) *UpdatePropertyUseCase {
+	return &UpdatePropertyUseCase{repo: repo, auditRepo: auditRepo}
 }
 
 func (uc *UpdatePropertyUseCase) Execute(ctx context.Context, id uuid.UUID, property *entity.Property) error {
@@ -35,5 +36,17 @@ func (uc *UpdatePropertyUseCase) Execute(ctx context.Context, id uuid.UUID, prop
 		return err
 	}
 
-	return uc.repo.Update(ctx, property)
+	if err := uc.repo.Update(ctx, property); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "UPDATE_PROPERTY",
+		ResourceType: "Property",
+		ResourceID:   id,
+		Success:      true,
+		Metadata:     map[string]any{"property_name": property.Name, "owner_id": property.OwnerID.String()},
+	})
+
+	return nil
 }

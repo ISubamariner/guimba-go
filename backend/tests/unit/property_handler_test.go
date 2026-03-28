@@ -20,12 +20,12 @@ import (
 )
 
 func newPropertyHandler(repo *mocks.PropertyRepositoryMock, userRepo *mocks.UserRepositoryMock) *handler.PropertyHandler {
-	createUC := propertyuc.NewCreatePropertyUseCase(repo, userRepo)
+	createUC := propertyuc.NewCreatePropertyUseCase(repo, userRepo, &mocks.AuditRepositoryMock{})
 	getUC := propertyuc.NewGetPropertyUseCase(repo)
 	listUC := propertyuc.NewListPropertiesUseCase(repo)
-	updateUC := propertyuc.NewUpdatePropertyUseCase(repo)
-	deactivateUC := propertyuc.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{})
-	deleteUC := propertyuc.NewDeletePropertyUseCase(repo)
+	updateUC := propertyuc.NewUpdatePropertyUseCase(repo, &mocks.AuditRepositoryMock{})
+	deactivateUC := propertyuc.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{}, &mocks.AuditRepositoryMock{})
+	deleteUC := propertyuc.NewDeletePropertyUseCase(repo, &mocks.AuditRepositoryMock{})
 	return handler.NewPropertyHandler(createUC, getUC, listUC, updateUC, deactivateUC, deleteUC)
 }
 

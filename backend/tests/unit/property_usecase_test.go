@@ -27,7 +27,7 @@ func TestCreateProperty_Success(t *testing.T) {
 		},
 	}
 
-	uc := property.NewCreatePropertyUseCase(repo, userRepo)
+	uc := property.NewCreatePropertyUseCase(repo, userRepo, &mocks.AuditRepositoryMock{})
 	p, _ := entity.NewProperty("Farm", "F-001", nil, nil, "LAND", nil, 500.0, uuid.New(), nil, nil)
 	err := uc.Execute(context.Background(), p)
 	if err != nil {
@@ -43,7 +43,7 @@ func TestCreateProperty_OwnerNotFound(t *testing.T) {
 		},
 	}
 
-	uc := property.NewCreatePropertyUseCase(repo, userRepo)
+	uc := property.NewCreatePropertyUseCase(repo, userRepo, &mocks.AuditRepositoryMock{})
 	p, _ := entity.NewProperty("Farm", "F-001", nil, nil, "LAND", nil, 500.0, uuid.New(), nil, nil)
 	err := uc.Execute(context.Background(), p)
 	if err == nil {
@@ -63,7 +63,7 @@ func TestCreateProperty_DuplicateCode(t *testing.T) {
 		},
 	}
 
-	uc := property.NewCreatePropertyUseCase(repo, userRepo)
+	uc := property.NewCreatePropertyUseCase(repo, userRepo, &mocks.AuditRepositoryMock{})
 	p, _ := entity.NewProperty("Farm", "F-001", nil, nil, "LAND", nil, 500.0, uuid.New(), nil, nil)
 	err := uc.Execute(context.Background(), p)
 	if err == nil {
@@ -165,7 +165,7 @@ func TestUpdateProperty_Success(t *testing.T) {
 		UpdateFn: func(ctx context.Context, p *entity.Property) error { return nil },
 	}
 
-	uc := property.NewUpdatePropertyUseCase(repo)
+	uc := property.NewUpdatePropertyUseCase(repo, &mocks.AuditRepositoryMock{})
 	updated := &entity.Property{Name: "Updated Farm", PropertyCode: "F-001", SizeInSqm: 600}
 	err := uc.Execute(context.Background(), propID, updated)
 	if err != nil {
@@ -182,7 +182,7 @@ func TestUpdateProperty_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	uc := property.NewUpdatePropertyUseCase(repo)
+	uc := property.NewUpdatePropertyUseCase(repo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New(), &entity.Property{Name: "X", PropertyCode: "X", SizeInSqm: 100})
 	if err == nil {
 		t.Fatal("expected not found error")
@@ -204,7 +204,7 @@ func TestDeactivateProperty_Success(t *testing.T) {
 			return nil
 		},
 	}
-	uc := property.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{})
+	uc := property.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{}, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), propID)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -217,7 +217,7 @@ func TestDeactivateProperty_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	uc := property.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{})
+	uc := property.NewDeactivatePropertyUseCase(repo, &mocks.DebtRepositoryMock{}, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New())
 	if err == nil {
 		t.Fatal("expected not found error")
@@ -234,7 +234,7 @@ func TestDeleteProperty_Success(t *testing.T) {
 		},
 		DeleteFn: func(ctx context.Context, id uuid.UUID) error { return nil },
 	}
-	uc := property.NewDeletePropertyUseCase(repo)
+	uc := property.NewDeletePropertyUseCase(repo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), propID)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -247,7 +247,7 @@ func TestDeleteProperty_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	uc := property.NewDeletePropertyUseCase(repo)
+	uc := property.NewDeletePropertyUseCase(repo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New())
 	if err == nil {
 		t.Fatal("expected not found error")

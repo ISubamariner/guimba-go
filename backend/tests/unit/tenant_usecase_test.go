@@ -30,7 +30,7 @@ func TestCreateTenant_Success(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewCreateTenantUseCase(repo, userRepo)
+	uc := tenant.NewCreateTenantUseCase(repo, userRepo, &mocks.AuditRepositoryMock{})
 	email := "tenant@example.com"
 	ten, err := entity.NewTenant("John Doe", &email, nil, nil, nil, uuid.New(), nil)
 	if err != nil {
@@ -51,7 +51,7 @@ func TestCreateTenant_LandlordNotFound(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewCreateTenantUseCase(repo, userRepo)
+	uc := tenant.NewCreateTenantUseCase(repo, userRepo, &mocks.AuditRepositoryMock{})
 	email := "tenant@example.com"
 	ten, _ := entity.NewTenant("John Doe", &email, nil, nil, nil, uuid.New(), nil)
 
@@ -74,7 +74,7 @@ func TestCreateTenant_DuplicateEmail(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewCreateTenantUseCase(repo, userRepo)
+	uc := tenant.NewCreateTenantUseCase(repo, userRepo, &mocks.AuditRepositoryMock{})
 	ten, _ := entity.NewTenant("John Doe", &email, nil, nil, nil, uuid.New(), nil)
 
 	err := uc.Execute(context.Background(), ten)
@@ -193,7 +193,7 @@ func TestUpdateTenant_Success(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewUpdateTenantUseCase(repo)
+	uc := tenant.NewUpdateTenantUseCase(repo, &mocks.AuditRepositoryMock{})
 	updated := &entity.Tenant{FullName: "John Updated", Email: &email}
 	err := uc.Execute(context.Background(), tenantID, updated)
 	if err != nil {
@@ -208,7 +208,7 @@ func TestUpdateTenant_NotFound(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewUpdateTenantUseCase(repo)
+	uc := tenant.NewUpdateTenantUseCase(repo, &mocks.AuditRepositoryMock{})
 	email := "test@example.com"
 	updated := &entity.Tenant{FullName: "John", Email: &email}
 	err := uc.Execute(context.Background(), uuid.New(), updated)
@@ -234,7 +234,7 @@ func TestDeactivateTenant_Success(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewDeactivateTenantUseCase(repo)
+	uc := tenant.NewDeactivateTenantUseCase(repo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), tenantID)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -248,7 +248,7 @@ func TestDeactivateTenant_NotFound(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewDeactivateTenantUseCase(repo)
+	uc := tenant.NewDeactivateTenantUseCase(repo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New())
 	if err == nil {
 		t.Fatal("expected not found error")
@@ -269,7 +269,7 @@ func TestDeleteTenant_Success(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewDeleteTenantUseCase(repo)
+	uc := tenant.NewDeleteTenantUseCase(repo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), tenantID)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -283,7 +283,7 @@ func TestDeleteTenant_NotFound(t *testing.T) {
 		},
 	}
 
-	uc := tenant.NewDeleteTenantUseCase(repo)
+	uc := tenant.NewDeleteTenantUseCase(repo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), uuid.New())
 	if err == nil {
 		t.Fatal("expected not found error")

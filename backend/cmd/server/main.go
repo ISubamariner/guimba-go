@@ -11,9 +11,11 @@ import (
 
 	"github.com/ISubamariner/guimba-go/backend/internal/delivery/http/handler"
 	"github.com/ISubamariner/guimba-go/backend/internal/delivery/http/router"
+	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/audit"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/cache"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/config"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/database"
+	mongorepo "github.com/ISubamariner/guimba-go/backend/internal/infrastructure/persistence/mongo"
 	"github.com/ISubamariner/guimba-go/backend/internal/infrastructure/persistence/pg"
 	authuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/auth"
 	beneficiaryuc "github.com/ISubamariner/guimba-go/backend/internal/usecase/beneficiary"
@@ -78,6 +80,12 @@ func main() {
 	}
 	defer cache.CloseRedis(redisClient)
 
+	// Wire Audit infrastructure
+	mongoAuditRepo := mongorepo.NewAuditRepoMongo(mongoClient, cfg.Mongo.DB)
+	auditRepo := audit.NewBufferedAuditLogger(mongoAuditRepo, redisClient)
+	go auditRepo.Start(ctx)
+	defer auditRepo.Stop()
+
 	// Wire handlers
 	healthHandler := handler.NewHealthHandler(pgPool, mongoClient, redisClient)
 
@@ -123,12 +131,12 @@ func main() {
 
 	// Wire Tenant module
 	tenantRepo := pg.NewTenantRepoPG(pgPool)
-	createTenantUC := tenantuc.NewCreateTenantUseCase(tenantRepo, userRepo)
+	createTenantUC := tenantuc.NewCreateTenantUseCase(tenantRepo, userRepo, auditRepo)
 	getTenantUC := tenantuc.NewGetTenantUseCase(tenantRepo)
 	listTenantsUC := tenantuc.NewListTenantsUseCase(tenantRepo)
-	updateTenantUC := tenantuc.NewUpdateTenantUseCase(tenantRepo)
-	deactivateTenantUC := tenantuc.NewDeactivateTenantUseCase(tenantRepo)
-	deleteTenantUC := tenantuc.NewDeleteTenantUseCase(tenantRepo)
+	updateTenantUC := tenantuc.NewUpdateTenantUseCase(tenantRepo, auditRepo)
+	deactivateTenantUC := tenantuc.NewDeactivateTenantUseCase(tenantRepo, auditRepo)
+	deleteTenantUC := tenantuc.NewDeleteTenantUseCase(tenantRepo, auditRepo)
 	tenantHandler := handler.NewTenantHandler(createTenantUC, getTenantUC, listTenantsUC, updateTenantUC, deactivateTenantUC, deleteTenantUC)
 
 	// Wire Debt repo (needed by Property deactivation)
@@ -136,12 +144,12 @@ func main() {
 
 	// Wire Property module
 	propertyRepo := pg.NewPropertyRepoPG(pgPool)
-	createPropertyUC := propertyuc.NewCreatePropertyUseCase(propertyRepo, userRepo)
+	createPropertyUC := propertyuc.NewCreatePropertyUseCase(propertyRepo, userRepo, auditRepo)
 	getPropertyUC := propertyuc.NewGetPropertyUseCase(propertyRepo)
 	listPropertiesUC := propertyuc.NewListPropertiesUseCase(propertyRepo)
-	updatePropertyUC := propertyuc.NewUpdatePropertyUseCase(propertyRepo)
-	deactivatePropertyUC := propertyuc.NewDeactivatePropertyUseCase(propertyRepo, debtRepo)
-	deletePropertyUC := propertyuc.NewDeletePropertyUseCase(propertyRepo)
+	updatePropertyUC := propertyuc.NewUpdatePropertyUseCase(propertyRepo, auditRepo)
+	deactivatePropertyUC := propertyuc.NewDeactivatePropertyUseCase(propertyRepo, debtRepo, auditRepo)
+	deletePropertyUC := propertyuc.NewDeletePropertyUseCase(propertyRepo, auditRepo)
 	propertyHandler := handler.NewPropertyHandler(createPropertyUC, getPropertyUC, listPropertiesUC, updatePropertyUC, deactivatePropertyUC, deletePropertyUC)
 
 	// Wire Debt module

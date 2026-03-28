@@ -379,7 +379,7 @@ func TestDeactivateProperty_BlockedByActiveDebts(t *testing.T) {
 			return true, nil
 		},
 	}
-	uc := property.NewDeactivatePropertyUseCase(propRepo, debtRepo)
+	uc := property.NewDeactivatePropertyUseCase(propRepo, debtRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), propID)
 	if err == nil {
 		t.Fatal("expected error when property has active debts")
@@ -399,7 +399,7 @@ func TestDeactivateProperty_AllowedWhenNoActiveDebts(t *testing.T) {
 			return false, nil
 		},
 	}
-	uc := property.NewDeactivatePropertyUseCase(propRepo, debtRepo)
+	uc := property.NewDeactivatePropertyUseCase(propRepo, debtRepo, &mocks.AuditRepositoryMock{})
 	err := uc.Execute(context.Background(), propID)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

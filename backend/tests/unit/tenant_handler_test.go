@@ -21,12 +21,12 @@ import (
 )
 
 func newTenantHandler(repo *mocks.TenantRepositoryMock, userRepo *mocks.UserRepositoryMock) *handler.TenantHandler {
-	createUC := tenantuc.NewCreateTenantUseCase(repo, userRepo)
+	createUC := tenantuc.NewCreateTenantUseCase(repo, userRepo, &mocks.AuditRepositoryMock{})
 	getUC := tenantuc.NewGetTenantUseCase(repo)
 	listUC := tenantuc.NewListTenantsUseCase(repo)
-	updateUC := tenantuc.NewUpdateTenantUseCase(repo)
-	deactivateUC := tenantuc.NewDeactivateTenantUseCase(repo)
-	deleteUC := tenantuc.NewDeleteTenantUseCase(repo)
+	updateUC := tenantuc.NewUpdateTenantUseCase(repo, &mocks.AuditRepositoryMock{})
+	deactivateUC := tenantuc.NewDeactivateTenantUseCase(repo, &mocks.AuditRepositoryMock{})
+	deleteUC := tenantuc.NewDeleteTenantUseCase(repo, &mocks.AuditRepositoryMock{})
 	return handler.NewTenantHandler(createUC, getUC, listUC, updateUC, deactivateUC, deleteUC)
 }
 

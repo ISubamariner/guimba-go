@@ -11,12 +11,13 @@ import (
 
 // DeactivateTenantUseCase handles deactivating a tenant.
 type DeactivateTenantUseCase struct {
-	repo repository.TenantRepository
+	repo      repository.TenantRepository
+	auditRepo repository.AuditRepository
 }
 
 // NewDeactivateTenantUseCase creates a new DeactivateTenantUseCase.
-func NewDeactivateTenantUseCase(repo repository.TenantRepository) *DeactivateTenantUseCase {
-	return &DeactivateTenantUseCase{repo: repo}
+func NewDeactivateTenantUseCase(repo repository.TenantRepository, auditRepo repository.AuditRepository) *DeactivateTenantUseCase {
+	return &DeactivateTenantUseCase{repo: repo, auditRepo: auditRepo}
 }
 
 // Execute deactivates a tenant by setting IsActive to false.
@@ -30,5 +31,17 @@ func (uc *DeactivateTenantUseCase) Execute(ctx context.Context, id uuid.UUID) er
 	}
 
 	existing.IsActive = false
-	return uc.repo.Update(ctx, existing)
+	if err := uc.repo.Update(ctx, existing); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "DEACTIVATE_TENANT",
+		ResourceType: "Tenant",
+		ResourceID:   id,
+		Success:      true,
+		Metadata:     map[string]any{"tenant_name": existing.FullName, "landlord_id": existing.LandlordID.String()},
+	})
+
+	return nil
 }

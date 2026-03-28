@@ -10,13 +10,14 @@ import (
 
 // CreateTenantUseCase handles creating a new tenant.
 type CreateTenantUseCase struct {
-	repo     repository.TenantRepository
-	userRepo repository.UserRepository
+	repo      repository.TenantRepository
+	userRepo  repository.UserRepository
+	auditRepo repository.AuditRepository
 }
 
 // NewCreateTenantUseCase creates a new CreateTenantUseCase.
-func NewCreateTenantUseCase(repo repository.TenantRepository, userRepo repository.UserRepository) *CreateTenantUseCase {
-	return &CreateTenantUseCase{repo: repo, userRepo: userRepo}
+func NewCreateTenantUseCase(repo repository.TenantRepository, userRepo repository.UserRepository, auditRepo repository.AuditRepository) *CreateTenantUseCase {
+	return &CreateTenantUseCase{repo: repo, userRepo: userRepo, auditRepo: auditRepo}
 }
 
 // Execute creates a new tenant after validating the landlord exists and email is unique.
@@ -45,5 +46,17 @@ func (uc *CreateTenantUseCase) Execute(ctx context.Context, tenant *entity.Tenan
 		}
 	}
 
-	return uc.repo.Create(ctx, tenant)
+	if err := uc.repo.Create(ctx, tenant); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "CREATE_TENANT",
+		ResourceType: "Tenant",
+		ResourceID:   tenant.ID,
+		Success:      true,
+		Metadata:     map[string]any{"tenant_name": tenant.FullName, "landlord_id": tenant.LandlordID.String()},
+	})
+
+	return nil
 }

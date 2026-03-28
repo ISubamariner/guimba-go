@@ -9,12 +9,13 @@ import (
 )
 
 type CreatePropertyUseCase struct {
-	repo     repository.PropertyRepository
-	userRepo repository.UserRepository
+	repo      repository.PropertyRepository
+	userRepo  repository.UserRepository
+	auditRepo repository.AuditRepository
 }
 
-func NewCreatePropertyUseCase(repo repository.PropertyRepository, userRepo repository.UserRepository) *CreatePropertyUseCase {
-	return &CreatePropertyUseCase{repo: repo, userRepo: userRepo}
+func NewCreatePropertyUseCase(repo repository.PropertyRepository, userRepo repository.UserRepository, auditRepo repository.AuditRepository) *CreatePropertyUseCase {
+	return &CreatePropertyUseCase{repo: repo, userRepo: userRepo, auditRepo: auditRepo}
 }
 
 func (uc *CreatePropertyUseCase) Execute(ctx context.Context, property *entity.Property) error {
@@ -38,5 +39,17 @@ func (uc *CreatePropertyUseCase) Execute(ctx context.Context, property *entity.P
 		return apperror.NewConflict(entity.ErrPropertyCodeExists.Error())
 	}
 
-	return uc.repo.Create(ctx, property)
+	if err := uc.repo.Create(ctx, property); err != nil {
+		return err
+	}
+
+	uc.auditRepo.Log(ctx, &repository.AuditEntry{
+		Action:       "CREATE_PROPERTY",
+		ResourceType: "Property",
+		ResourceID:   property.ID,
+		Success:      true,
+		Metadata:     map[string]any{"property_name": property.Name, "property_code": property.PropertyCode, "owner_id": property.OwnerID.String()},
+	})
+
+	return nil
 }
