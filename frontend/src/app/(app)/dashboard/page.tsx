@@ -65,7 +65,7 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {activities.data.map((activity, i) => (
                 <div
-                  key={i}
+                  key={`${activity.timestamp}-${activity.action}-${i}`}
                   className="flex items-start justify-between gap-4 py-2 border-b border-border last:border-0"
                 >
                   <div className="flex-1 min-w-0">
