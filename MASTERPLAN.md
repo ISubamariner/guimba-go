@@ -14,7 +14,7 @@
 | Redis        | ✅ 7-alpine (Docker, port 6380) |
 | Copilot CLI  | ✅ Active       |
 | Custom Instructions/Agents/Skills | ✅ Configured (Phase 0 complete) |
-| MCP Servers | ✅ 9 servers (postgres, mongodb, redis, memory, filesystem, playwright, chrome-devtools, context7, markitdown) |
+| MCP Servers | ✅ 6 servers (postgres, mongodb, playwright, chrome-devtools, context7) via `.mcp.json` |
 
 ---
 
@@ -649,49 +649,77 @@ Go tests live in `backend/tests/` due to Go's `internal` package visibility rule
 Build module-by-module, following Clean Architecture layers:
 
 For **each** domain aggregate (e.g., Debts, Users, Borrowers):
-- [ ] Define domain models and schema
-- [ ] Create `domain/entity/` structs (zero dependencies)
-- [ ] Create `domain/repository/` interface
-- [ ] Create `usecase/` implementations (application business rules)
-- [ ] Create `infrastructure/persistence/` implementation (pgx queries)
-- [ ] Create `delivery/http/dto/` request/response types
-- [ ] Create `delivery/http/handler/` HTTP handlers
-- [ ] Register routes in `delivery/http/router/`
-- [ ] Add Swagger annotations
-- [ ] Write unit tests in `tests/unit/`
+- [x] Define domain models and schema
+- [x] Create `domain/entity/` structs (zero dependencies)
+- [x] Create `domain/repository/` interface
+- [x] Create `usecase/` implementations (application business rules)
+- [x] Create `infrastructure/persistence/` implementation (pgx queries)
+- [x] Create `delivery/http/dto/` request/response types
+- [x] Create `delivery/http/handler/` HTTP handlers
+- [x] Register routes in `delivery/http/router/`
+- [x] Add Swagger annotations
+- [x] Write unit tests in `tests/unit/`
 - [ ] Write integration tests in `tests/integration/`
 
 Port order:
 1. [x] **Programs** (core entity, simplest CRUD) — ✅ Complete: entity, repository interface, 5 use cases, PG repo, DTOs, handler with Swagger, routes, 35 unit tests
 2. [x] **Users & Auth** (authentication, JWT, roles) — ✅ Complete: full RBAC (users, roles, permissions tables), JWT auth (access+refresh tokens), bcrypt passwords, auth middleware (RequireRole), Redis token blocklist, register/login/refresh/logout/me + user CRUD + role assignment, 57 total unit tests
 3. [x] **Beneficiaries** (relationships to programs) — ✅ Complete: entity (full_name, email, phone, national_id, address, dob, status), program enrollment (many-to-many), 7 use cases (CRUD + enroll/remove from program), PG repo, DTOs, handler with Swagger, role-gated routes, 31 new tests (88 total)
-4. [ ] **Remaining modules** (iterate)
+4. [x] **Tenants** — ✅ Complete: landlord-scoped CRUD with Address value object, deactivation, role-gated routes (admin, landlord)
+5. [x] **Properties** — ✅ Complete: landlord-scoped CRUD with deactivation, property types/codes, role-gated routes (admin, landlord)
+6. [x] **Debts & Transactions** — ✅ Complete: Money value object, debt state machine (PENDING→PARTIAL→PAID/OVERDUE/CANCELLED), payment/refund orchestration, lazy overdue detection, transaction verification
+7. [x] **Audit** — ✅ Complete: Redis-buffered MongoDB audit logger, admin + landlord query endpoints
+8. [x] **Dashboard** — ✅ Complete: stats (total tenants/properties, active/overdue debts) + recent activities
+9. [x] **Export** — ✅ Complete: CSV download endpoints for tenants, properties, debts
+10. [x] **Background Jobs** — ✅ Complete: overdue debt scheduler with 24-hour interval
 
 ---
 
 ## Phase 5: Frontend (Next.js)
 
-- [ ] Set up Next.js with TypeScript, Tailwind CSS
-- [ ] **Design System Foundation**:
-  - [ ] Create `src/styles/tokens.css` — CSS custom properties (colors, spacing, radii, shadows)
-  - [ ] Create `src/styles/typography.css` — font scale, weights, line-heights
-  - [ ] Create `src/styles/layouts.css` — reusable layout patterns (page shell, sidebar, grid)
-  - [ ] Create `src/styles/components.css` — `@apply`-based component classes (`.btn`, `.card`, `.input`)
-  - [ ] Configure `tailwind.config.ts` to extend theme with design tokens
-  - [ ] Create `src/lib/cn.ts` — clsx + tailwind-merge utility
-- [ ] **UI Primitive Components** (`src/components/ui/`):
-  - [ ] Button (variants: primary, secondary, outline, ghost, destructive; sizes: sm, md, lg)
-  - [ ] Input, Textarea, Select (consistent form styling)
-  - [ ] Card (header, body, footer slots)
-  - [ ] Modal / Dialog
-  - [ ] Table (sortable, pagination-ready)
-  - [ ] Badge, Alert, Toast
-  - [ ] Barrel export in `src/components/ui/index.ts`
-- [ ] Create API client layer
-- [ ] Port UI pages for Guimba (using design system components)
-- [ ] Connect to Go backend APIs
-- [ ] Set up Playwright Page Object Models for completed pages
-- [ ] Write Playwright E2E specs for critical user flows
+- [x] Set up Next.js 16 with TypeScript strict, Tailwind CSS v4, App Router
+- [x] **Design System Foundation**:
+  - [x] Create design tokens in `src/app/globals.css` — CSS custom properties (colors, spacing, radii) with dark mode via `@theme inline` + `@media (prefers-color-scheme: dark)`
+  - [x] Create `src/lib/cn.ts` — clsx + tailwind-merge utility
+- [x] **UI Primitive Components** (`src/components/ui/`):
+  - [x] Button (variants: primary, secondary, outline, ghost, danger; sizes: sm, md, lg)
+  - [x] Input, Textarea, Select (with label, error, forwardRef)
+  - [x] Card (CardHeader, CardTitle, CardContent)
+  - [x] Modal (native `<dialog>` element)
+  - [x] Table (Table, TableHeader, TableBody, TableRow, TableHead, TableCell)
+  - [x] Badge (default, success, warning, danger, outline)
+  - [x] Toast (ToastProvider + useToast hook, auto-dismiss 4s)
+  - [x] Barrel export in `src/components/ui/index.ts`
+- [x] **API Client & Auth**:
+  - [x] Typed API client (`src/lib/api.ts`) with JWT auth + single-flight token refresh
+  - [x] AuthProvider context with session restore, login, register, logout, hasRole
+  - [x] `useFetch<T>` hook with loading/error/refetch + conditional null-path support
+  - [x] TypeScript types matching all backend DTOs (`src/types/api.ts`)
+  - [x] Format helpers (`formatMoney`, `formatDate`, `formatDateTime`)
+- [x] **Core Pages**:
+  - [x] Login + Register pages with form validation
+  - [x] App shell with role-based sidebar navigation + auth guard
+  - [x] Dashboard — stats cards (tenants, properties, active/overdue debts) + recent activities
+- [x] **Feature Pages (CRUD)**:
+  - [x] Tenants — list table + create modal
+  - [x] Properties — list table + create modal (type select, monthly rent)
+  - [x] Debts — list with status badges + create/pay/cancel modals, conditional action buttons
+  - [x] Transactions — read-only list with type/verified badges
+  - [x] Audit Logs — role-based endpoint switching (admin vs landlord)
+- [x] **Build Verified**: TypeScript 0 errors, ESLint 0 warnings, Next.js production build passes (10 routes)
+- [x] **Playwright E2E Tests** (26 tests in 10 spec files):
+  - [x] Playwright project initialized with Chromium, page object model, hybrid data strategy
+  - [x] API client helper + global setup (admin user registration/auth state)
+  - [x] Auth fixture with pre-authenticated `authedPage`
+  - [x] 7 page objects (login, dashboard, tenants, properties, debts, transactions, audit)
+  - [x] Auth specs (login, register validation, auth guard redirect)
+  - [x] Dashboard specs (stats cards, recent activities)
+  - [x] Tenants CRUD specs (list, create via modal, Active badge)
+  - [x] Properties CRUD specs (list, create via modal)
+  - [x] Debts lifecycle specs (create→PENDING, pay→PAID, cancel→CANCELLED)
+  - [x] Transactions specs (deterministic data setup, table columns)
+  - [x] Audit specs (deterministic data setup, table columns)
+  - [x] Sidebar navigation specs (nav items, active route highlighting, sign out)
 - [ ] Establish visual regression baselines for key pages
 
 ---
