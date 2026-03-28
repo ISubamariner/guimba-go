@@ -88,6 +88,7 @@ All under `/api/v1`. Also: `GET /health` (no auth), `GET /swagger/*` (Swagger UI
 |:---|:---|:---|:---|
 | `/auth/register, /login, /refresh` | POST | Public | — |
 | `/auth/me, /auth/logout` | GET, POST | Required | Any |
+| `/auth/change-password` | POST | Required | Any |
 | `/programs` | GET, GET/:id | Public | — |
 | `/programs` | POST, PUT/:id, DELETE/:id | Required | admin, staff |
 | `/users` | GET, PUT/:id, DELETE/:id | Required | admin |
@@ -106,6 +107,13 @@ All under `/api/v1`. Also: `GET /health` (no auth), `GET /swagger/*` (Swagger UI
 | `/transactions/refund` | POST | Required | admin, landlord |
 | `/transactions` | GET, GET/:id | Required | admin, landlord |
 | `/transactions/{id}/verify` | PUT | Required | admin, landlord |
+| `/audit` | GET | Required | admin, auditor |
+| `/audit/landlord` | GET | Required | Any |
+| `/dashboard/stats` | GET | Required | Any |
+| `/dashboard/recent-activities` | GET | Required | Any |
+| `/export/tenants` | GET | Required | admin, landlord |
+| `/export/properties` | GET | Required | admin, landlord |
+| `/export/debts` | GET | Required | admin, landlord |
 
 ### Key Directories
 
@@ -117,7 +125,7 @@ All under `/api/v1`. Also: `GET /health` (no auth), `GET /swagger/*` (Swagger UI
 
 ### Current Modules (Phase 4)
 
-Programs, Users & Auth (JWT + RBAC), Beneficiaries (with program enrollment), Tenants (landlord-scoped CRUD with Address value object, deactivation), Properties (landlord-scoped with deactivation), Debts & Transactions (Money value object, debt state machine, payment/refund orchestration, lazy overdue detection, transaction verification). Frontend is scaffolded but not built out (Phase 5). See `MASTERPLAN.md`.
+Programs, Users & Auth (JWT + RBAC + change-password), Beneficiaries (with program enrollment), Tenants (landlord-scoped CRUD with Address value object, deactivation), Properties (landlord-scoped with deactivation), Debts & Transactions (Money value object, debt state machine, payment/refund orchestration, lazy overdue detection, transaction verification), Audit (Redis-buffered MongoDB logger, query endpoints), Dashboard (stats + recent activities), Export (CSV download for tenants/properties/debts), Background Jobs (overdue debt scheduler). Frontend is scaffolded but not built out (Phase 5). See `MASTERPLAN.md`.
 
 ## Conventions
 
